@@ -10,9 +10,12 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.CoreShaders;
 import net.minecraft.client.renderer.entity.ItemRenderer;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.BundleItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.BundleContents;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,7 +39,17 @@ public class ContainerSummaryController {
             addItem(map, itemStack);
 
             if (ItemUtils.isShulkerBox(itemStack)) {
-                for (ItemStack slot: ItemUtils.getShulkerContent(itemStack)) {
+                for (ItemStack slot : ItemUtils.getShulkerContent(itemStack)) {
+                    if (!slot.isEmpty()) {
+                        addItem(map, slot);
+                    }
+                }
+            }
+
+            if (itemStack.getItem() instanceof BundleItem) {
+                BundleContents contents = itemStack.get(DataComponents.BUNDLE_CONTENTS);
+                assert contents != null;
+                for (ItemStack slot : contents.items()) {
                     if (!slot.isEmpty()) {
                         addItem(map, slot);
                     }
