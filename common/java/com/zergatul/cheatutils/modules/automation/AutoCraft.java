@@ -143,7 +143,7 @@ public class AutoCraft {
                         if (ingredients.isPresent()) {
                             for (Ingredient ingredient : ingredients.get()) {
                                 for (Holder<Item> holder : ingredient.items()) {
-                                    if (entry.has(context, holder.get())) {
+                                    if (entry.has(context, holder.value())) {
                                         continue recipesLoop;
                                     }
                                 }
@@ -180,8 +180,8 @@ public class AutoCraft {
             }
             if (!has) {
                 for (Holder<Item> holder : ingredient.items()) {
-                    if (!list.contains(holder.get())) {
-                        list.add(holder.get());
+                    if (!list.contains(holder.value())) {
+                        list.add(holder.value());
                     }
                 }
             }

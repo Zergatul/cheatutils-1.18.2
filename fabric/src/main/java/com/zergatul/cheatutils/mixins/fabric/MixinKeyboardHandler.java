@@ -21,7 +21,7 @@ public abstract class MixinKeyboardHandler {
         return InvMove.instance.overrideGetScreen(mc);
     }
 
-    @Inject(
+    /*@Inject(
             method = "method_1454(ILnet/minecraft/client/gui/screens/Screen;[ZIII)V",
             at = @At("TAIL"))
     private static void onScreenHandleKeys(int code, Screen screen, boolean[] resultHack, int key, int scancode, int modifiers, CallbackInfo ci) {
@@ -30,5 +30,5 @@ public abstract class MixinKeyboardHandler {
                 resultHack[0] = false;
             }
         }
-    }
+    }*/
 }

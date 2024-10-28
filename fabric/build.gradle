@@ -2,7 +2,7 @@ import java.nio.file.Paths
 import org.apache.tools.ant.taskdefs.condition.Os
 
 plugins {
-    id 'fabric-loom' version '1.6-SNAPSHOT'
+    id 'fabric-loom' version '1.8-SNAPSHOT'
     id 'maven-publish'
 }
 

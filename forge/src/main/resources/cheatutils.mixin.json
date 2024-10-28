@@ -35,10 +35,10 @@
     "common.accessors.TextureStateShardAccessor",
     "common.accessors.WalkAnimationStateAccessor",
 
+    "common.MixinAbstractBoat",
     "common.MixinAbstractContainerMenu",
     "common.MixinAbstractContainerScreen",
     "common.MixinBlockBehaviourBlockStateBase",
-    "common.MixinAbstractBoat",
     "common.MixinCamera",
     "common.MixinChatComponent",
     "common.MixinChatScreen",
