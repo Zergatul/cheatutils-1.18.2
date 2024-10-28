@@ -66,6 +66,6 @@ public class AutoCriticals {
     }
 
     private void sendPositionPacket(double x, double y, double z, boolean isOnGround) {
-        NetworkPacketsController.instance.sendPacket(new ServerboundMovePlayerPacket.Pos(x, y, z, isOnGround));
+        NetworkPacketsController.instance.sendPacket(new ServerboundMovePlayerPacket.Pos(x, y, z, isOnGround, false));
     }
 }

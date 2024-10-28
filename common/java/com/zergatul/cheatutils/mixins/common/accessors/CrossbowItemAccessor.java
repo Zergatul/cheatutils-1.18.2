@@ -7,6 +7,7 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(CrossbowItem.class)
 public interface CrossbowItemAccessor {
+
     @Invoker("getShootingPower")
     static float getShootingPower_CU(ChargedProjectiles projectiles) {
         throw new AssertionError();

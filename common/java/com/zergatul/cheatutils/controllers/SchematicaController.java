@@ -17,6 +17,7 @@ import com.zergatul.cheatutils.common.events.BlockUpdateEvent;
 import com.zergatul.cheatutils.common.events.RenderWorldLastEvent;
 import com.zergatul.cheatutils.wrappers.BakedModelWrapper;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.CoreShaders;
 import net.minecraft.client.renderer.FaceInfo;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.block.model.BakedQuad;
@@ -203,7 +204,7 @@ public class SchematicaController {
                                             (float) ((info.zFace == FaceInfo.Constants.MIN_Z ? pos.getZ() : pos.getZ() + 1) - view.z))
                                     .setUv(sprite.getU1(), sprite.getV0());
 
-                            RenderHelper.drawBuffer(SharedVertexBuffer.instance, bufferBuilder, event.pose(), event.getProjection(), GameRenderer.getPositionTexShader());
+                            RenderHelper.drawBuffer(SharedVertexBuffer.instance, bufferBuilder, event.pose(), event.getProjection(), CoreShaders.POSITION_TEX);
                         }
                     }
                 }

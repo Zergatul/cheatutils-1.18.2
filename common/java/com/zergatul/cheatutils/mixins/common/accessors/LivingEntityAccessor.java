@@ -10,9 +10,6 @@ public interface LivingEntityAccessor {
     @Accessor("swimAmount")
     float getSwimAmount_CU();
 
-    @Accessor("swimAmountO")
-    float getSwimAmount0_CU();
-
     @Accessor("swimAmount")
     void setSwimAmount_CU(float value);
 

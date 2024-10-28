@@ -12,6 +12,7 @@ import com.zergatul.cheatutils.common.events.RenderGuiEvent;
 import com.zergatul.cheatutils.common.events.PreRenderGuiOverlayEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.CoreShaders;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.chunk.LevelChunk;
@@ -91,7 +92,6 @@ public class ChunkOverlayController {
         Quaternionf quaternion = new Quaternionf(0, 0, 0, 1);
         quaternion.rotationYXZ(-(float)Math.PI, -(float)Math.PI, -yRot * ((float)Math.PI / 180F));
         poseStack.mulPose(quaternion);
-        RenderSystem.applyModelViewMatrix();
 
         //RenderSystem.enableDepthTest();
         RenderSystem.disableDepthTest();
@@ -99,7 +99,7 @@ public class ChunkOverlayController {
         RenderSystem.enableBlend();
         RenderSystem.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShader(CoreShaders.POSITION_TEX);
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
         //RenderSystem.setShaderColor(0.5f, 0.5f, 0.5f, 0.5f);
 
@@ -139,7 +139,6 @@ public class ChunkOverlayController {
         }
 
         poseStack.popPose();
-        RenderSystem.applyModelViewMatrix();
     }
 
     private void onPreRenderGameOverlay(PreRenderGuiOverlayEvent event) {

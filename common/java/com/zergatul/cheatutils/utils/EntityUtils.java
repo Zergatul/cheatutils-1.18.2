@@ -129,11 +129,16 @@ public class EntityUtils {
         if (index <= 0) {
             throw new IllegalStateException("Cannot process stack trace.");
         }
-        StackTraceElement element = elements[index - 1];
-        if (!element.getMethodName().equals("<init>")) {
-            throw new IllegalStateException("Constructor call expected on stack trace.");
+
+        while (index > 0) {
+            index--;
+            StackTraceElement element = elements[index];
+            if (element.getMethodName().equals("<init>")) {
+                return element;
+            }
         }
-        return element;
+
+        throw new IllegalStateException("Constructor call expected on stack trace.");
     }
 
     private static void forEachInterface(Class<?> clazz, Consumer<Class<?>> consumer) {

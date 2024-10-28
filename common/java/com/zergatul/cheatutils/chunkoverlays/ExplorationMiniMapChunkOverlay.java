@@ -6,7 +6,6 @@ import com.zergatul.cheatutils.ModMain;
 import com.zergatul.cheatutils.concurrent.PreRenderGuiExecutor;
 import com.zergatul.cheatutils.configs.ConfigStore;
 import com.zergatul.cheatutils.configs.ExplorationMiniMapConfig;
-import com.zergatul.cheatutils.controllers.SnapshotChunk;
 import com.zergatul.cheatutils.render.Primitives;
 import com.zergatul.cheatutils.utils.Dimension;
 import com.zergatul.cheatutils.utils.LevelChunkUtils;
@@ -165,8 +164,8 @@ public class ExplorationMiniMapChunkOverlay extends AbstractChunkOverlay {
                                 continue;
                             }
                             int color = convert(materialColor.col);
-                            if (segment.image.getPixelRGBA(xf + dx, yf + dz) != color) {
-                                segment.image.setPixelRGBA(xf + dx, yf + dz, color);
+                            if (segment.image.getPixel(xf + dx, yf + dz) != color) {
+                                segment.image.setPixel(xf + dx, yf + dz, color);
                                 return true;
                             } else {
                                 return false;
@@ -184,8 +183,8 @@ public class ExplorationMiniMapChunkOverlay extends AbstractChunkOverlay {
             MapColor materialColor = state.getBlock().defaultMapColor();
             if (materialColor != MapColor.NONE) {
                 int color = convert(materialColor.col);
-                if (segment.image.getPixelRGBA(xf + dx, yf + dz) != color) {
-                    segment.image.setPixelRGBA(xf + dx, yf + dz, color);
+                if (segment.image.getPixel(xf + dx, yf + dz) != color) {
+                    segment.image.setPixel(xf + dx, yf + dz, color);
                     return true;
                 } else {
                     return false;
@@ -201,10 +200,7 @@ public class ExplorationMiniMapChunkOverlay extends AbstractChunkOverlay {
     }
 
     private static int convert(int color) {
-        int red = (color >> 16) & 0xFF;
-        int green = (color >> 8) & 0xFF;
-        int blue = (color) & 0xFF;
-        return 0xFF000000 | (blue << 16) | (green << 8) | red;
+        return 0xFF000000 | color;
     }
 
     public static class Marker {

@@ -10,6 +10,7 @@ import com.zergatul.cheatutils.render.RenderHelper;
 import com.zergatul.cheatutils.utils.SharedVertexBuffer;
 import com.zergatul.cheatutils.common.events.RenderWorldLastEvent;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.CoreShaders;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
@@ -75,7 +76,7 @@ public class EndCityChunks {
         RenderSystem.enableBlend();
         RenderSystem.disableCull();
 
-        RenderHelper.drawBuffer(SharedVertexBuffer.instance, bufferBuilder, event.getPose(), event.getProjection(), GameRenderer.getPositionColorShader());
+        RenderHelper.drawBuffer(SharedVertexBuffer.instance, bufferBuilder, event.getPose(), event.getProjection(), CoreShaders.POSITION_COLOR);
 
         RenderSystem.disableBlend();
         RenderSystem.enableCull();

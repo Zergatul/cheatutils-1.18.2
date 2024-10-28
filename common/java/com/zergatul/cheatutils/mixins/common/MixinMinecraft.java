@@ -2,7 +2,6 @@ package com.zergatul.cheatutils.mixins.common;
 
 import com.zergatul.cheatutils.common.Events;
 import com.zergatul.cheatutils.configs.ConfigStore;
-import com.zergatul.cheatutils.configs.PerformanceConfig;
 import com.zergatul.cheatutils.modules.scripting.BlockAutomation;
 import com.zergatul.cheatutils.modules.automation.VillagerRoller;
 import com.zergatul.cheatutils.modules.esp.EntityEsp;
@@ -68,14 +67,6 @@ public abstract class MixinMinecraft {
     private void onCreateTitle(CallbackInfoReturnable<String> info) {
         if (ConfigStore.instance.getConfig().userNameConfig.showNameInTitle) {
             info.setReturnValue(Minecraft.getInstance().getUser().getName() + " - " + info.getReturnValue());
-        }
-    }
-
-    @Inject(at = @At("HEAD"), method = "getFramerateLimit()I", cancellable = true)
-    private void onGetFramerateLimit(CallbackInfoReturnable<Integer> info) {
-        PerformanceConfig config = ConfigStore.instance.getConfig().performanceConfig;
-        if (config.limitBackgroundWindowFps && !isWindowActive()) {
-            info.setReturnValue(config.backgroundWindowFps);
         }
     }
 

@@ -43,13 +43,13 @@ public class WorldDownloadChunkOverlay extends AbstractChunkOverlay {
             // clear pixels
             for (int dx = 0; dx < 16; dx++) {
                 for (int dy = 0; dy < 16; dy++) {
-                    segment.image.setPixelRGBA(xf + dx, yf + dy, 0);
+                    segment.image.setPixel(xf + dx, yf + dy, 0);
                 }
             }
 
             for (int dx = 0; dx < 16; dx++) {
                 for (int dy = 0; dy < 16; dy++) {
-                    segment.image.setPixelRGBA(xf + dx, yf + dy, texture.getPixelRGBA(dx, dy));
+                    segment.image.setPixel(xf + dx, yf + dy, texture.getPixel(dx, dy));
                 }
             }
 

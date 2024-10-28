@@ -61,8 +61,6 @@ public abstract class MixinEntity {
                     AABB aabb = player.getBoundingBox().expandTowards(result);
                     if (aabb.maxY > config.limit) {
                         info.setReturnValue(new Vec3(result.x, result.y - (aabb.maxY - config.limit), result.z));
-                        //ModMain.LOGGER.info("collide override: {} -> {}", vec31, info.getReturnValue());
-                        //ModMain.LOGGER.info("collide override: y={}, {} -> {}, maxy={}", player.getY(), vec31, info.getReturnValue(), aabb.maxY);
                     }
                 }
             }

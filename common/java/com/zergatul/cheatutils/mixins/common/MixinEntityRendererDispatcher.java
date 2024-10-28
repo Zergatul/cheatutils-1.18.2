@@ -28,7 +28,7 @@ public abstract class MixinEntityRendererDispatcher {
     }
 
     @ModifyVariable(
-            method = "render(Lnet/minecraft/world/entity/Entity;DDDFFLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V",
+            method = "render(Lnet/minecraft/world/entity/Entity;DDDFLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/client/renderer/entity/EntityRenderer;)V",
             at = @At("HEAD"), argsOnly = true)
     private MultiBufferSource onRenderModifyBufferSource(MultiBufferSource bufferSource) {
         Entity entity = MixinLevelRendererHelper.current;

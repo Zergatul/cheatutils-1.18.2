@@ -23,7 +23,7 @@ public class FakeWeather implements Module {
             if (mc.level == null) {
                 return;
             }
-            mc.level.setDayTime(value);
+            mc.level.getLevelData().setDayTime(value);
         });
     }
 

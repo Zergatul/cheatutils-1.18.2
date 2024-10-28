@@ -2,13 +2,13 @@ package com.zergatul.cheatutils.controllers;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.zergatul.cheatutils.common.Registries;
-import com.zergatul.cheatutils.render.ItemRenderHelper;
 import com.zergatul.cheatutils.render.Primitives;
 import com.zergatul.cheatutils.utils.ItemUtils;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.CoreShaders;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
@@ -23,6 +23,8 @@ import java.util.stream.Collectors;
 public class ContainerSummaryController {
 
     public static final ContainerSummaryController instance = new ContainerSummaryController();
+
+    private static final Minecraft mc = Minecraft.getInstance();
 
     private ContainerSummaryController() {
 
@@ -132,8 +134,9 @@ public class ContainerSummaryController {
                     x += font.width(stacksCount + "x");
                 }
 
-                ItemStack stack = new ItemStack(item, stackSize);
-                ItemRenderHelper.renderItem(graphics, stack, x, y);
+                ItemStack itemStack = new ItemStack(item, stackSize);
+                graphics.renderFakeItem(itemStack, x, y);
+                graphics.renderItemDecorations(mc.font, itemStack, x, y);
                 x += 16 + ITEM_PADDING;
 
                 if (remCount > 0) {
@@ -143,8 +146,9 @@ public class ContainerSummaryController {
             }
 
             if (remCount > 0) {
-                var stack = new ItemStack(item, remCount);
-                ItemRenderHelper.renderItem(graphics, stack, x, y);
+                ItemStack itemStack = new ItemStack(item, remCount);
+                graphics.renderFakeItem(itemStack, x, y);
+                graphics.renderItemDecorations(mc.font, itemStack, x, y);
                 //x += 16 + ITEM_PADDING;
             }
 
@@ -183,7 +187,7 @@ public class ContainerSummaryController {
                 y += drawable.draw(graphics, font, itemRenderer, player, x + (width - drawable.width) / 2 + H_PADDING, y + 2);
             }
 
-            RenderSystem.setShader(GameRenderer::getPositionTexShader);
+            RenderSystem.setShader(CoreShaders.POSITION_TEX);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
             RenderSystem.setShaderTexture(0, CONTAINER_TEXTURE);
             Primitives.drawTexture(graphics.pose().last().pose(), x, yo, 1, ItemDrawable.HEIGHT * list.size() + 1, 124, 3, 3, 1, 1, 256, 256);

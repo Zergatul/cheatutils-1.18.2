@@ -79,7 +79,7 @@ public abstract class MixinEnchantmentScreen extends AbstractContainerScreen<Enc
         addRenderableWidget(findDropsButton = new Button(left, cursor, btnWidth, btnHeight, Component.literal("Find drops"), this::onFindDropsClick));*/
     }
 
-    @Inject(at = @At("TAIL"), method = "Lnet/minecraft/client/gui/screens/inventory/EnchantmentScreen;containerTick()V")
+    /*@Inject(at = @At("TAIL"), method = "Lnet/minecraft/client/gui/screens/inventory/EnchantmentScreen;containerTick()V")
     private void onContainerTick(CallbackInfo info) {
         EnchantmentScreenController controller = EnchantmentScreenController.instance;
 
@@ -193,5 +193,5 @@ public abstract class MixinEnchantmentScreen extends AbstractContainerScreen<Enc
         }
 
         return (int)enchantPowerBonus;
-    }
+    }*/
 }

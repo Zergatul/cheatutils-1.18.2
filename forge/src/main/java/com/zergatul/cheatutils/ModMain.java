@@ -23,7 +23,6 @@ import com.zergatul.cheatutils.webui.ConfigHttpServer;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -41,11 +40,10 @@ public class ModMain {
 
     private final List<Module> modules = new ArrayList<>();
 
-    public ModMain() {
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onCommonSetup);
-        //FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onClientSetup);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onLoadComplete);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onRegisterKeyMappings);
+    public ModMain(final FMLJavaModLoadingContext context) {
+        context.getModEventBus().addListener(this::onCommonSetup);
+        context.getModEventBus().addListener(this::onLoadComplete);
+        context.getModEventBus().addListener(this::onRegisterKeyMappings);
 
         register(KeyBindingsController.instance);
         register(BlockEventsProcessor.instance);

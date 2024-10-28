@@ -4,16 +4,14 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import com.zergatul.cheatutils.common.Events;
 import com.zergatul.cheatutils.common.events.ContainerRenderLabelsEvent;
-import com.zergatul.cheatutils.common.events.PostRenderTooltipEvent;
 import com.zergatul.cheatutils.common.events.PreRenderTooltipEvent;
 import com.zergatul.cheatutils.configs.ConfigStore;
 import com.zergatul.cheatutils.configs.ShulkerTooltipConfig;
-import com.zergatul.cheatutils.render.ItemRenderHelper;
 import com.zergatul.cheatutils.utils.ItemUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.CoreShaders;
 import net.minecraft.core.NonNullList;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -30,6 +28,7 @@ public class ShulkerTooltipController {
     private static final int ImageHeight = 166;
     private static final int TranslateZ = 250;
 
+    private final Minecraft mc = Minecraft.getInstance();
     private boolean locked = false;
     private boolean allowTooltip = false;
     private ItemStack lockedStack;
@@ -100,7 +99,6 @@ public class ShulkerTooltipController {
                 poseStack.pushPose();
                 poseStack.setIdentity();
                 poseStack.mulPose(lockedPose);
-                RenderSystem.applyModelViewMatrix();
 
                 int x = lockedX;
                 int y = lockedY;
@@ -113,7 +111,6 @@ public class ShulkerTooltipController {
                 renderTooltip(event.getGuiGraphics(), x, y, mx, my);
 
                 poseStack.popPose();
-                RenderSystem.applyModelViewMatrix();
             } else {
                 clearLocked();
             }
@@ -124,7 +121,6 @@ public class ShulkerTooltipController {
         PoseStack poseStack = currentEvent.getGraphics().pose();
         poseStack.pushPose();
         poseStack.translate(0, 0, TranslateZ);
-        RenderSystem.applyModelViewMatrix();
 
         // 12 pixels margin from DefaultTooltipPositioner and 4 pixels are vanilla border
         int x, y;
@@ -157,11 +153,10 @@ public class ShulkerTooltipController {
         renderShulkerInventory(currentEvent.getGraphics(), currentEvent.getItemStack(), poseStack.last().pose(), x, y);
 
         poseStack.popPose();
-        RenderSystem.applyModelViewMatrix();
     }
 
     private void renderShulkerInventory(GuiGraphics graphics, ItemStack itemStack, Matrix4f matrix, int x, int y) {
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShader(CoreShaders.POSITION_TEX);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.setShaderTexture(0, CONTAINER_TEXTURE);
 
@@ -198,7 +193,7 @@ public class ShulkerTooltipController {
     }
 
     private void drawTexture(Matrix4f matrix, int x, int y, int width, int height, int z, int texX, int texY, int texWidth, int texHeight, int texSizeX, int texSizeY) {
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShader(CoreShaders.POSITION_TEX);
         RenderSystem.enableDepthTest();
         BufferBuilder bufferbuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
         bufferbuilder.addVertex(matrix, x, y, z).setUv(1F * texX / texSizeX, 1F * texY / texSizeY);
@@ -210,7 +205,8 @@ public class ShulkerTooltipController {
 
     private void renderSlot(GuiGraphics graphics, ItemStack itemStack, int x, int y) {
         RenderSystem.enableDepthTest();
-        ItemRenderHelper.renderItem(graphics, itemStack, x, y);
+        graphics.renderFakeItem(itemStack, x, y);
+        graphics.renderItemDecorations(mc.font, itemStack, x, y);
     }
 
     private void clearLocked() {

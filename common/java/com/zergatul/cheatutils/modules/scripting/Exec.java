@@ -5,6 +5,7 @@ import com.zergatul.cheatutils.common.events.SendChatEvent;
 import com.zergatul.cheatutils.configs.ConfigStore;
 import com.zergatul.cheatutils.controllers.ScriptsController;
 import com.zergatul.cheatutils.modules.Module;
+import com.zergatul.cheatutils.scripting.AsyncRunnable;
 import com.zergatul.scripting.DiagnosticMessage;
 import com.zergatul.scripting.compiler.CompilationResult;
 import net.minecraft.client.Minecraft;
@@ -28,7 +29,7 @@ public class Exec implements Module {
             try {
                 CompilationResult result = ScriptsController.instance.compileKeys(event.getMessage().substring(1));
                 if (result.getProgram() != null) {
-                    result.<Runnable>getProgram().run();
+                    result.<AsyncRunnable>getProgram().run();
                     systemMessage("OK", 0xFF80FF80);
                 } else {
                     for (DiagnosticMessage message : result.getDiagnostics()) {

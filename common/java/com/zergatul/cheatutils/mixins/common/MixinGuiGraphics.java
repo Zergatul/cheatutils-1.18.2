@@ -8,6 +8,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipPositioner;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import org.joml.Vector2ic;
 import org.spongepowered.asm.mixin.Mixin;
@@ -25,7 +26,7 @@ public abstract class MixinGuiGraphics {
             at = @At("HEAD"),
             method = "renderTooltipInternal",
             cancellable = true)
-    private void onPreRenderTooltipInternal(Font font, List<ClientTooltipComponent> list, int x, int y, ClientTooltipPositioner positioner, CallbackInfo info) {
+    private void onPreRenderTooltipInternal(Font font, List<ClientTooltipComponent> list, int x, int y, ClientTooltipPositioner positioner, ResourceLocation location, CallbackInfo info) {
         GuiGraphics graphics = (GuiGraphics) (Object) this;
         ItemStack itemStack = Tooltip.getCurrentItemStack(graphics);
         if (itemStack == null) {
@@ -50,7 +51,7 @@ public abstract class MixinGuiGraphics {
     @Inject(
             at = @At("TAIL"),
             method = "renderTooltipInternal")
-    private void onPostRenderTooltipInternal(Font font, List<ClientTooltipComponent> list, int x, int y, ClientTooltipPositioner positioner, CallbackInfo info) {
+    private void onPostRenderTooltipInternal(Font font, List<ClientTooltipComponent> list, int x, int y, ClientTooltipPositioner positioner, ResourceLocation location, CallbackInfo info) {
         GuiGraphics graphics = (GuiGraphics) (Object) this;
         ItemStack itemStack = Tooltip.getCurrentItemStack(graphics);
         if (itemStack == null) {

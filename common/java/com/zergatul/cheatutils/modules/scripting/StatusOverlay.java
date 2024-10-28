@@ -9,6 +9,7 @@ import com.zergatul.cheatutils.modules.Module;
 import com.zergatul.cheatutils.render.Primitives;
 import com.zergatul.cheatutils.common.events.RenderGuiEvent;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.CoreShaders;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.MutableComponent;
 import org.lwjgl.opengl.GL11;
@@ -89,14 +90,13 @@ public class StatusOverlay implements Module {
         poseStack.pushPose();
         poseStack.setIdentity();
         poseStack.translate(0, 0, TranslateZ);
-        RenderSystem.applyModelViewMatrix();
 
         RenderSystem.disableDepthTest();
         RenderSystem.disableCull();
         RenderSystem.enableBlend();
         RenderSystem.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShader(CoreShaders.POSITION_TEX);
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
 
         for (Align align: Align.values()) {
@@ -121,7 +121,6 @@ public class StatusOverlay implements Module {
         }
 
         poseStack.popPose();
-        RenderSystem.applyModelViewMatrix();
     }
 
     private int getLeft(HorizontalAlign align, int screenWidth, int textWidth) {

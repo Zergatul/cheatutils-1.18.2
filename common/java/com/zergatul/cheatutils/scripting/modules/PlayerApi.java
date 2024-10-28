@@ -6,6 +6,7 @@ import com.zergatul.cheatutils.mixins.common.accessors.MultiPlayerGameModeAccess
 import com.zergatul.cheatutils.scripting.ApiVisibility;
 import com.zergatul.cheatutils.scripting.ApiType;
 import com.zergatul.cheatutils.scripting.types.Position3d;
+import com.zergatul.cheatutils.utils.InputBuilder;
 import com.zergatul.cheatutils.utils.Rotation;
 import com.zergatul.cheatutils.utils.RotationUtils;
 import com.zergatul.scripting.MethodDescription;
@@ -22,6 +23,7 @@ import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.player.Input;
 import net.minecraft.world.entity.vehicle.ChestBoat;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
@@ -522,12 +524,14 @@ public class PlayerApi {
                     return;
                 }
 
-                boolean oldShiftKeyDown = mc.player.input.shiftKeyDown;
-                mc.player.input.shiftKeyDown = true;
+                Input oldInput = mc.player.input.keyPresses;
+                mc.player.input.keyPresses = new InputBuilder(oldInput).shift(true).build();
+
                 mc.gameMode.interactAt(mc.player, target, new EntityHitResult(target), InteractionHand.MAIN_HAND);
                 mc.gameMode.interact(mc.player, target, InteractionHand.MAIN_HAND);
                 mc.player.swing(InteractionHand.MAIN_HAND);
-                mc.player.input.shiftKeyDown = oldShiftKeyDown;
+
+                mc.player.input.keyPresses = oldInput;
             }
         }
 

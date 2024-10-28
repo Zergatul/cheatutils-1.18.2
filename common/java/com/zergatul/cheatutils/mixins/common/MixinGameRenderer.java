@@ -38,15 +38,15 @@ public abstract class MixinGameRenderer {
 
     @Inject(
             at = @At(value = "RETURN", ordinal = 1),
-            method = "getFov(Lnet/minecraft/client/Camera;FZ)D",
+            method = "getFov",
             cancellable = true)
-    private void onGetFov(Camera camera, float partialTicks, boolean p_109144_, CallbackInfoReturnable<Double> info) {
+    private void onGetFov(Camera camera, float partialTicks, boolean p_109144_, CallbackInfoReturnable<Float> info) {
         double fov = info.getReturnValue();
         GetFieldOfViewEvent event = new GetFieldOfViewEvent();
         event.set(fov);
         Events.GetFieldOfView.trigger(event);
         if (fov != event.get()) {
-            info.setReturnValue(event.get());
+            info.setReturnValue((float) event.get());
         }
     }
 
