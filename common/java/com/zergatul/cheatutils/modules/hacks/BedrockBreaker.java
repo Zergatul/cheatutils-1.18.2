@@ -161,7 +161,8 @@ public class BedrockBreaker implements Module {
         mc.player.connection.send(new ServerboundMovePlayerPacket.Rot(
                 mc.player.getYRot(),
                 90, // look down
-                mc.player.onGround()));
+                mc.player.onGround(),
+                false));
         mc.player.connection.send(new ServerboundUseItemOnPacket(
                 InteractionHand.MAIN_HAND,
                 new BlockHitResult(plan.target(), plan.direction(), plan.neighbour(), false),
@@ -324,7 +325,8 @@ public class BedrockBreaker implements Module {
             mc.player.connection.send(new ServerboundMovePlayerPacket.Rot(
                     mc.player.getYRot(),
                     -90, // look up
-                    mc.player.onGround()));
+                    mc.player.onGround(),
+                    false));
             mc.player.connection.send(new ServerboundUseItemOnPacket(
                     InteractionHand.MAIN_HAND,
                     new BlockHitResult(plan.target(), plan.direction(), plan.neighbour(), false),

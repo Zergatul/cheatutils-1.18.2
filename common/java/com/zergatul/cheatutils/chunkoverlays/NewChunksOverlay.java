@@ -106,7 +106,7 @@ public class NewChunksOverlay extends AbstractChunkOverlay {
         // clear pixels
         for (int dx = 0; dx < 16; dx++) {
             for (int dy = 0; dy < 16; dy++) {
-                segment.image.setPixelRGBA(xf + dx, yf + dy, 0);
+                segment.image.setPixel(xf + dx, yf + dy, 0);
             }
         }
 
@@ -131,7 +131,7 @@ public class NewChunksOverlay extends AbstractChunkOverlay {
 
         for (int dx = 0; dx < 16; dx++) {
             for (int dy = 0; dy < 16; dy++) {
-                segment.image.setPixelRGBA(xf + dx, yf + dy, image.getPixelRGBA(dx, dy));
+                segment.image.setPixel(xf + dx, yf + dy, image.getPixel(dx, dy));
             }
         }
     }

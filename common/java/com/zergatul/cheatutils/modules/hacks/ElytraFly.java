@@ -5,7 +5,7 @@ import com.zergatul.cheatutils.configs.ConfigStore;
 import com.zergatul.cheatutils.configs.ElytraHackConfig;
 import com.zergatul.cheatutils.modules.Module;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.Input;
+import net.minecraft.client.player.ClientInput;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.item.ItemStack;
@@ -89,20 +89,20 @@ public class ElytraFly implements Module {
             }
             default -> {
                 Vec3 delta = mc.player.getDeltaMovement();
-                Input input = mc.player.input;
-                if (input.jumping) {
+                ClientInput input = mc.player.input;
+                if (input.keyPresses.jump()) {
                     delta = delta.add(0, config.vanillaFlyVerticalAcceleration / 20, 0);
                 }
-                if (input.shiftKeyDown) {
+                if (input.keyPresses.shift()) {
                     delta = delta.subtract(0, config.vanillaFlyVerticalAcceleration / 20, 0);
                 }
 
                 float yaw = (float) Math.toRadians(mc.player.getYRot());
                 Vec3 forward = new Vec3(-Math.sin(yaw), 0, Math.cos(yaw)).scale(config.vanillaFlyHorizontalAcceleration / 20);
-                if (input.up) {
+                if (input.keyPresses.forward()) {
                     delta = delta.add(forward);
                 }
-                if (input.down) {
+                if (input.keyPresses.backward()) {
                     delta = delta.subtract(forward);
                 }
                 mc.player.setDeltaMovement(delta);

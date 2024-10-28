@@ -13,13 +13,13 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public abstract class MixinEntityRenderer {
 
     @Shadow
-    protected abstract boolean shouldShowName(Entity entity);
+    protected abstract boolean shouldShowName(Entity entity, double distanceSquared);
 
     @Redirect(
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/entity/EntityRenderer;shouldShowName(Lnet/minecraft/world/entity/Entity;)Z"),
-            method = "render(Lnet/minecraft/world/entity/Entity;FFLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V")
-    private boolean onInvokeShouldShowName(EntityRenderer<?> instance, Entity entity) {
-        if (!this.shouldShowName(entity)) {
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/entity/EntityRenderer;shouldShowName(Lnet/minecraft/world/entity/Entity;D)Z"),
+            method = "extractRenderState")
+    private boolean onInvokeShouldShowName(EntityRenderer renderer, Entity entity, double p_363875_) {
+        if (!this.shouldShowName(entity, 1)) {
             return false;
         }
         for (EntityEspConfig entityConfig : ConfigStore.instance.getConfig().entities.configs) {

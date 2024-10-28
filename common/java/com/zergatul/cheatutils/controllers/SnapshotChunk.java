@@ -29,7 +29,7 @@ public class SnapshotChunk {
     }
 
     public int getMinY() {
-        return levelHeightAccessor.getMinBuildHeight();
+        return levelHeightAccessor.getMinY();
     }
 
     public ChunkPos getPos() {
@@ -41,7 +41,7 @@ public class SnapshotChunk {
     }
 
     public BlockState getBlockState(int x, int y, int z) {
-        int index = (y - levelHeightAccessor.getMinBuildHeight()) >> 4;
+        int index = (y - levelHeightAccessor.getMinY()) >> 4;
         return sections[index].getBlockState(x, y & 0x0F, z);
     }
 

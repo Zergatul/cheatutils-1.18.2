@@ -7,6 +7,7 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MoverType;
+import net.minecraft.world.entity.vehicle.AbstractBoat;
 import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
@@ -15,8 +16,8 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(Boat.class)
-public abstract class MixinBoat extends Entity {
+@Mixin(AbstractBoat.class)
+public abstract class MixinAbstractBoat extends Entity {
 
     @Shadow
     private float invFriction;
@@ -33,15 +34,14 @@ public abstract class MixinBoat extends Entity {
     @Shadow
     private boolean inputDown;
 
-    public MixinBoat(EntityType<?> p_19870_, Level p_19871_) {
+    private MixinAbstractBoat(EntityType<?> p_19870_, Level p_19871_) {
         super(p_19870_, p_19871_);
     }
 
     @ModifyArg(
             method = "floatBoat()V",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/vehicle/Boat;setDeltaMovement(DDD)V", ordinal = 0),
-            index = 0
-    )
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/vehicle/AbstractBoat;setDeltaMovement(DDD)V", ordinal = 0),
+            index = 0)
     private double onFloatBoatSetDeltaMovementX(double dx) {
         var config = ConfigStore.instance.getConfig().boatHackConfig;
         if (config.overrideFriction) {
@@ -53,9 +53,8 @@ public abstract class MixinBoat extends Entity {
 
     @ModifyArg(
             method = "floatBoat()V",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/vehicle/Boat;setDeltaMovement(DDD)V", ordinal = 0),
-            index = 2
-    )
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/vehicle/AbstractBoat;setDeltaMovement(DDD)V", ordinal = 0),
+            index = 2)
     private double onFloatBoatSetDeltaMovementZ(double dz) {
         var config = ConfigStore.instance.getConfig().boatHackConfig;
         if (config.overrideFriction) {
@@ -64,18 +63,6 @@ public abstract class MixinBoat extends Entity {
             return dz;
         }
     }
-
-    /*@ModifyVariable(method = "Lnet/minecraft/world/entity/vehicle/Boat;setPaddleState(ZZ)V", at = @At("HEAD"), ordinal = 0, argsOnly = true)
-    private boolean onSetPaddleStateModifyLeft(boolean left) {
-        BoatHackConfig config = ConfigStore.instance.getConfig().boatHackConfig;
-        return !config.fly && left;
-    }
-
-    @ModifyVariable(method = "Lnet/minecraft/world/entity/vehicle/Boat;setPaddleState(ZZ)V", at = @At("HEAD"), ordinal = 1, argsOnly = true)
-    private boolean onSetPaddleStateModifyRight(boolean right) {
-        BoatHackConfig config = ConfigStore.instance.getConfig().boatHackConfig;
-        return !config.fly && right;
-    }*/
 
     @Inject(at = @At("HEAD"), method = "controlBoat()V")
     private void onControlBoat(CallbackInfo info) {

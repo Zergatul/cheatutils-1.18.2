@@ -29,7 +29,7 @@ public abstract class MixinSlimeBlock extends HalfTransparentBlock {
         }
     }
 
-    @Inject(at = @At("HEAD"), method = "updateEntityAfterFallOn(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/world/entity/Entity;)V", cancellable = true)
+    @Inject(at = @At("HEAD"), method = "updateEntityMovementAfterFallOn", cancellable = true)
     private void onUpdateEntityAfterFallOn(BlockGetter p_56406_, Entity entity, CallbackInfo info) {
         if (shouldFallback(entity)) {
             entity.setDeltaMovement(entity.getDeltaMovement().multiply(1.0D, 0.0D, 1.0D));

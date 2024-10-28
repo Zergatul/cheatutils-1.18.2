@@ -23,8 +23,8 @@ public class NearbyBlockEnumerator {
         int zc = (int) Math.round(source.z);
         int x1 = xc - delta;
         int x2 = xc + delta;
-        int y1 = Math.max(yc - delta, mc.level.getMinBuildHeight());
-        int y2 = Math.min(yc + delta, mc.level.getMaxBuildHeight());
+        int y1 = Math.max(yc - delta, mc.level.getMinY());
+        int y2 = Math.min(yc + delta, mc.level.getMaxY());
         int z1 = zc - delta;
         int z2 = zc + delta;
 

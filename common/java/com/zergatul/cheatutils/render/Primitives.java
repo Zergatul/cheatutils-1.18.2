@@ -3,7 +3,7 @@ package com.zergatul.cheatutils.render;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import com.zergatul.cheatutils.utils.SharedVertexBuffer;
-import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.CoreShaders;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
 
@@ -24,7 +24,7 @@ public class Primitives {
         RenderSystem.disableDepthTest();
         GL11.glEnable(GL11.GL_LINE_SMOOTH);
 
-        RenderHelper.drawBuffer(SharedVertexBuffer.instance, bufferBuilder, pose, projection, GameRenderer.getPositionColorShader());
+        RenderHelper.drawBuffer(SharedVertexBuffer.instance, bufferBuilder, pose, projection, CoreShaders.POSITION_COLOR);
 
         RenderSystem.disableBlend();
         RenderSystem.enableCull();
@@ -52,7 +52,7 @@ public class Primitives {
         float f2 = (float)(color & 255) / 255.0F;
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
+        RenderSystem.setShader(CoreShaders.POSITION_COLOR);
         BufferBuilder bufferbuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
         bufferbuilder.addVertex(matrix, (float)x1, (float)y2, 0.0F).setColor(f, f1, f2, f3);
         bufferbuilder.addVertex(matrix, (float)x2, (float)y2, 0.0F).setColor(f, f1, f2, f3);
@@ -83,7 +83,7 @@ public class Primitives {
         float b = (float)(color & 255) / 255.0F;
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
+        RenderSystem.setShader(CoreShaders.POSITION_COLOR);
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
         BufferBuilder bufferbuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
         bufferbuilder.addVertex(matrix, (float)x1, (float)y2, 0.0F).setColor(r, g, b, a);
@@ -97,7 +97,7 @@ public class Primitives {
     // copy from
     // Lnet/minecraft/client/renderer/entity/ItemRenderer;fillRect(Lcom/mojang/blaze3d/vertex/BufferBuilder;IIIIIIII)V
     public static void fillRect(double p_115154_, double p_115155_, int p_115156_, int p_115157_, int p_115158_, int p_115159_, int p_115160_, int p_115161_) {
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
+        RenderSystem.setShader(CoreShaders.POSITION_COLOR);
         BufferBuilder bufferbuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
         bufferbuilder.addVertex((float) (p_115154_ + 0), (float)(p_115155_ + 0), 0.0F).setColor(p_115158_, p_115159_, p_115160_, p_115161_);
         bufferbuilder.addVertex((float)(p_115154_ + 0), (float)(p_115155_ + p_115157_), 0.0F).setColor(p_115158_, p_115159_, p_115160_, p_115161_);
@@ -107,7 +107,7 @@ public class Primitives {
     }
 
     public static void drawTexture(Matrix4f matrix, float x, float y, float width, float height, float z, int texX, int texY, int texWidth, int texHeight, int texSizeX, int texSizeY) {
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShader(CoreShaders.POSITION_TEX);
         BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
         bufferBuilder.addVertex(matrix, x, y, z).setUv(1F * texX / texSizeX, 1F * texY / texSizeY);
         bufferBuilder.addVertex(matrix, x, y + height, z).setUv(1F * texX / texSizeX, 1F * (texY + texHeight) / texSizeY);

@@ -98,7 +98,7 @@ public class BlockUtils {
             //NetworkPacketsController.instance.sendPacket(new ServerboundMovePlayerPacket.Rot(rotation.yRot(), rotation.xRot(), mc.player.onGround()));
             float xRot = Float.isNaN(rotation.xRot()) ? mc.player.getXRot() : rotation.xRot();
             float yRot = Float.isNaN(rotation.yRot()) ? mc.player.getYRot() : rotation.yRot();
-            mc.player.connection.send(new ServerboundMovePlayerPacket.Rot(yRot, xRot, mc.player.onGround()));
+            mc.player.connection.send(new ServerboundMovePlayerPacket.Rot(yRot, xRot, mc.player.onGround(), false));
 
             // server uses yHeadRot, and it happens on the next tick
             // this is temp hack!
@@ -114,7 +114,7 @@ public class BlockUtils {
         InteractionHand hand = InteractionHand.MAIN_HAND;
         InteractionResult result = mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, hit);
         if (result.consumesAction()) {
-            if (result.shouldSwing()) {
+            if (result instanceof InteractionResult.Success success && success.swingSource() == InteractionResult.SwingSource.CLIENT) {
                 mc.player.swing(hand);
             }
         }

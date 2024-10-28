@@ -8,6 +8,7 @@ import com.zergatul.cheatutils.modules.Module;
 import com.zergatul.cheatutils.render.Primitives;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.MobEffectTextureManager;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -46,15 +47,15 @@ public class BetterStatusEffects implements Module {
             MobEffectInstance effectInstance = sorted.get(i);
 
             if (effectInstance.isAmbient()) {
-                graphics.blitSprite(GuiAccessor.getEffectBackgroundAmbientSprite(), left, y, 24, 24);
+                graphics.blitSprite(RenderType::guiTextured, GuiAccessor.getEffectBackgroundAmbientSprite(), left, y, 24, 24);
             } else {
-                graphics.blitSprite(GuiAccessor.getEffectBackgroundSprite(), left, y, 24, 24);
+                graphics.blitSprite(RenderType::guiTextured, GuiAccessor.getEffectBackgroundSprite(), left, y, 24, 24);
             }
 
             TextureAtlasSprite textureatlassprite = manager.get(effectInstance.getEffect());
-            RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
-            graphics.blit(left + 3, y + 3, 200, 18, 18, textureatlassprite);
+            graphics.blitSprite(RenderType::guiTextured, textureatlassprite, left + 3, y + 3, 18, 18);
 
+            RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
             String duration = MobEffectUtil.formatDuration(effectInstance, 1, mc.level.tickRateManager().tickrate()).getString();
             if (duration.startsWith("00")) {
                 duration = duration.substring(1);

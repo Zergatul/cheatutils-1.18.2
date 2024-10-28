@@ -48,7 +48,7 @@ public class TpsCounterController {
     private void onServerPacket(NetworkPacketsController.ServerPacketArgs args) {
         if (args.packet instanceof ClientboundSetTimePacket packet) {
             localTime[counter % SIZE] = System.nanoTime();
-            gameTime[counter % SIZE] = packet.getGameTime();
+            gameTime[counter % SIZE] = packet.gameTime();
             counter++;
         }
     }

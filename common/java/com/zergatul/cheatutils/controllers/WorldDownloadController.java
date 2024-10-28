@@ -3,7 +3,7 @@ package com.zergatul.cheatutils.controllers;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.serialization.Codec;
 import com.zergatul.cheatutils.chunkoverlays.WorldDownloadChunkOverlay;
-import com.zergatul.cheatutils.mixins.common.accessors.ChunkSerializerAccessor;
+import com.zergatul.cheatutils.mixins.common.accessors.SerializableChunkDataAccessor;
 import com.zergatul.cheatutils.utils.Dimension;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -12,19 +12,13 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.*;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.*;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.chunk.*;
-import net.minecraft.world.level.chunk.status.ChunkType;
-import net.minecraft.world.level.chunk.storage.ChunkSerializer;
 import net.minecraft.world.level.chunk.storage.ChunkStorage;
 import net.minecraft.world.level.chunk.storage.RegionStorageInfo;
-import net.minecraft.world.level.levelgen.BelowZeroRetrogen;
-import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraft.world.level.levelgen.blending.BlendingData;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.storage.*;
 import org.apache.logging.log4j.LogManager;
@@ -157,7 +151,7 @@ public class WorldDownloadController {
             }
 
             CompoundTag compoundtag = write(level, chunk);
-            storage.write(chunk.getPos(), compoundtag);
+            storage.write(chunk.getPos(), () -> compoundtag);
 
             ChunkOverlayController.instance.ofType(WorldDownloadChunkOverlay.class).notifyChunkSaved(
                     dimension, chunk.getPos().x, chunk.getPos().z);
@@ -166,128 +160,45 @@ public class WorldDownloadController {
         }
     }
 
-    // copied from ChunkSerializer.write
+    // copy from SerializableChunkData.write(level, chunk)
     private CompoundTag write(ClientLevel level, ChunkAccess chunk) {
-        ChunkPos chunkpos = chunk.getPos();
-        CompoundTag compoundtag = NbtUtils.addCurrentDataVersion(new CompoundTag());
-        compoundtag.putInt("xPos", chunkpos.x);
-        compoundtag.putInt("yPos", chunk.getMinSection());
-        compoundtag.putInt("zPos", chunkpos.z);
-        compoundtag.putLong("LastUpdate", level.getGameTime());
-        compoundtag.putLong("InhabitedTime", chunk.getInhabitedTime());
-        compoundtag.putString("Status", BuiltInRegistries.CHUNK_STATUS.getKey(chunk.getPersistedStatus()).toString());
-        BlendingData blendingdata = chunk.getBlendingData();
-        if (blendingdata != null) {
-            BlendingData.CODEC
-                    .encodeStart(NbtOps.INSTANCE, blendingdata)
-                    .resultOrPartial(logger::error)
-                    .ifPresent(p_196909_ -> compoundtag.put("blending_data", p_196909_));
-        }
+        CompoundTag chunkNbt = NbtUtils.addCurrentDataVersion(new CompoundTag());
+        chunkNbt.putInt("xPos", chunk.getPos().x);
+        chunkNbt.putInt("yPos", chunk.getMinSectionY());
+        chunkNbt.putInt("zPos", chunk.getPos().z);
+        chunkNbt.putLong("LastUpdate", level.getGameTime());
+        chunkNbt.putLong("InhabitedTime", chunk.getInhabitedTime());
+        chunkNbt.putString("Status", BuiltInRegistries.CHUNK_STATUS.getKey(chunk.getPersistedStatus()).toString());
 
-        /*BelowZeroRetrogen belowzeroretrogen = chunk.getBelowZeroRetrogen();
-        if (belowzeroretrogen != null) {
-            BelowZeroRetrogen.CODEC
-                    .encodeStart(NbtOps.INSTANCE, belowzeroretrogen)
-                    .resultOrPartial(logger::error)
-                    .ifPresent(p_188279_ -> compoundtag.put("below_zero_retrogen", p_188279_));
-        }*/
-
-        UpgradeData upgradedata = chunk.getUpgradeData();
-        if (!upgradedata.isEmpty()) {
-            compoundtag.put("UpgradeData", upgradedata.write());
-        }
-
-        LevelChunkSection[] alevelchunksection = chunk.getSections();
-        ListTag listtag = new ListTag();
-        LevelLightEngine levellightengine = level.getChunkSource().getLightEngine();
-        Registry<Biome> registry = level.registryAccess().registryOrThrow(Registries.BIOME);
+        Registry<Biome> registry = level.registryAccess().lookupOrThrow(Registries.BIOME);
         Codec<PalettedContainerRO<Holder<Biome>>> codec = makeBiomeCodec(registry);
-        boolean flag = chunk.isLightCorrect();
 
-        for (int i = levellightengine.getMinLightSection(); i < levellightengine.getMaxLightSection(); i++) {
-            int j = chunk.getSectionIndexFromSectionY(i);
-            boolean flag1 = j >= 0 && j < alevelchunksection.length;
-            DataLayer datalayer = levellightengine.getLayerListener(LightLayer.BLOCK).getDataLayerData(SectionPos.of(chunkpos, i));
-            DataLayer datalayer1 = levellightengine.getLayerListener(LightLayer.SKY).getDataLayerData(SectionPos.of(chunkpos, i));
-            if (flag1 || datalayer != null || datalayer1 != null) {
-                CompoundTag compoundtag1 = new CompoundTag();
-                if (flag1) {
-                    LevelChunkSection levelchunksection = alevelchunksection[j];
-                    compoundtag1.put("block_states", ChunkSerializerAccessor.getBlockStateCodec_CU().encodeStart(NbtOps.INSTANCE, levelchunksection.getStates()).getOrThrow());
-                    compoundtag1.put("biomes", codec.encodeStart(NbtOps.INSTANCE, levelchunksection.getBiomes()).getOrThrow());
-                }
-
-                if (datalayer != null && !datalayer.isEmpty()) {
-                    compoundtag1.putByteArray("BlockLight", datalayer.getData());
-                }
-
-                if (datalayer1 != null && !datalayer1.isEmpty()) {
-                    compoundtag1.putByteArray("SkyLight", datalayer1.getData());
-                }
-
-                if (!compoundtag1.isEmpty()) {
-                    compoundtag1.putByte("Y", (byte)i);
-                    listtag.add(compoundtag1);
-                }
-            }
+        ListTag sectionsNbt = new ListTag();
+        for (int i = 0; i < chunk.getSectionsCount(); i++) {
+            LevelChunkSection section = chunk.getSection(i);
+            CompoundTag sectionNbt = new CompoundTag();
+            sectionNbt.put("block_states", SerializableChunkDataAccessor.getBlockStateCodec_CU().encodeStart(NbtOps.INSTANCE, section.getStates()).getOrThrow());
+            sectionNbt.put("biomes", codec.encodeStart(NbtOps.INSTANCE, section.getBiomes()).getOrThrow());
+            sectionNbt.putByte("Y", (byte)(i + chunk.getMinSectionY()));
+            sectionsNbt.add(sectionNbt);
         }
 
-        compoundtag.put("sections", listtag);
-        if (flag) {
-            compoundtag.putBoolean("isLightOn", true);
-        }
+        chunkNbt.put("sections", sectionsNbt);
 
-        ListTag listtag1 = new ListTag();
-
+        ListTag blockEntitiesNbt = new ListTag();
         for (BlockPos blockpos : chunk.getBlockEntitiesPos()) {
-            CompoundTag compoundtag3 = chunk.getBlockEntityNbtForSaving(blockpos, level.registryAccess());
-            if (compoundtag3 != null) {
-                listtag1.add(compoundtag3);
+            CompoundTag blockEntityNbt = chunk.getBlockEntityNbtForSaving(blockpos, level.registryAccess());
+            if (blockEntityNbt != null) {
+                blockEntitiesNbt.add(blockEntityNbt);
             }
         }
+        chunkNbt.put("block_entities", blockEntitiesNbt);
 
-        compoundtag.put("block_entities", listtag1);
-        /*if (chunk.getStatus().getChunkType() == ChunkType.PROTOCHUNK) {
-            ProtoChunk protochunk = (ProtoChunk)chunk;
-            ListTag listtag2 = new ListTag();
-            listtag2.addAll(protochunk.getEntities());
-            compoundtag.put("entities", listtag2);
-            CompoundTag compoundtag4 = new CompoundTag();
-
-            for (GenerationStep.Carving generationstep$carving : GenerationStep.Carving.values()) {
-                CarvingMask carvingmask = protochunk.getCarvingMask(generationstep$carving);
-                if (carvingmask != null) {
-                    compoundtag4.putLongArray(generationstep$carving.toString(), carvingmask.toArray());
-                }
-            }
-
-            compoundtag.put("CarvingMasks", compoundtag4);
-        }
-        else if (chunk instanceof LevelChunk levelChunk){
-            try {
-                final CompoundTag capTag = levelChunk.writeCapsToNBT();
-                if (capTag != null) compoundtag.put("ForgeCaps", capTag);
-            } catch (Exception exception) {
-                logger.error("A capability provider has thrown an exception trying to write state. It will not persist. Report this to the mod author", exception);
-            }
-        }*/
-
-        saveTicks(level, compoundtag, chunk.getTicksForSerialization());
-        compoundtag.put("PostProcessing", ChunkSerializer.packOffsets(chunk.getPostProcessing()));
-        CompoundTag compoundtag2 = new CompoundTag();
-
-        for (Map.Entry<Heightmap.Types, Heightmap> entry : chunk.getHeightmaps()) {
-            if (chunk.getPersistedStatus().heightmapsAfter().contains(entry.getKey())) {
-                compoundtag2.put(entry.getKey().getSerializationKey(), new LongArrayTag(entry.getValue().getRawData()));
-            }
-        }
-
-        compoundtag.put("Heightmaps", compoundtag2);
-        return compoundtag;
+        return chunkNbt;
     }
 
-    private Codec<PalettedContainerRO<Holder<Biome>>> makeBiomeCodec(Registry<Biome> p_188261_) {
-        return PalettedContainer.codecRO(p_188261_.asHolderIdMap(), p_188261_.holderByNameCodec(), PalettedContainer.Strategy.SECTION_BIOMES, p_188261_.getHolderOrThrow(Biomes.PLAINS));
+    private Codec<PalettedContainerRO<Holder<Biome>>> makeBiomeCodec(Registry<Biome> registry) {
+        return PalettedContainer.codecRO(registry.asHolderIdMap(), registry.holderByNameCodec(), PalettedContainer.Strategy.SECTION_BIOMES, registry.getOrThrow(Biomes.PLAINS));
     }
 
     private void closeAccess() {
@@ -300,11 +211,5 @@ public class WorldDownloadController {
             }
             access = null;
         }
-    }
-
-    private static void saveTicks(ClientLevel p_188236_, CompoundTag p_188237_, ChunkAccess.TicksToSave p_188238_) {
-        long i = p_188236_.getLevelData().getGameTime();
-        p_188237_.put("block_ticks", p_188238_.blocks().save(i, p_258987_ -> BuiltInRegistries.BLOCK.getKey(p_258987_).toString()));
-        p_188237_.put("fluid_ticks", p_188238_.fluids().save(i, p_258989_ -> BuiltInRegistries.FLUID.getKey(p_258989_).toString()));
     }
 }

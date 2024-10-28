@@ -87,7 +87,7 @@ public abstract class MixinLocalPlayer extends AbstractClientPlayer {
 
     @ModifyArg(
             method = "aiStep()V",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/Input;tick(ZF)V"),
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/ClientInput;tick(ZF)V"),
             index = 0)
     private boolean onAiStepInputTick(boolean isMovingSlowly) {
         var config = ConfigStore.instance.getConfig().movementHackConfig;

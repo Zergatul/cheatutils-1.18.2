@@ -17,7 +17,6 @@ import com.zergatul.cheatutils.font.StylizedTextChunk;
 import com.zergatul.cheatutils.font.TextBounds;
 import com.zergatul.cheatutils.mixins.common.accessors.ProjectileAccessor;
 import com.zergatul.cheatutils.modules.esp.EntityEsp;
-import com.zergatul.cheatutils.render.ItemRenderHelper;
 import com.zergatul.cheatutils.render.Primitives;
 import com.zergatul.cheatutils.common.events.RenderGuiEvent;
 import com.zergatul.cheatutils.common.events.RenderWorldLastEvent;
@@ -286,7 +285,7 @@ public class EntityTitleController {
                     items.add(offhand);
                 }
 
-                if (items.size() > 0) {
+                if (!items.isEmpty()) {
                     enchantments.clear();
                     enchantmentWidths.clear();
                     enchantmentTextWidths.clear();
@@ -325,13 +324,15 @@ public class EntityTitleController {
                     yc -= height;
                     double yp = yc + scaledHalfHeight;
 
-                    // why it was required?
-                    //GlStates.setupOverlayRenderState(true, false);
-
                     double xpl = xp;
                     for (int i = 0; i < items.size(); i++) {
                         double xCenterOffset = enchantmentTextWidths.get(i) > 16 ? (enchantmentTextWidths.get(i) - 16) / 2d : 0;
-                        ItemRenderHelper.renderItem(livingEntity, items.get(i), xpl + xCenterOffset, yp, 0, event.getTickDelta());
+                        event.graphics().pose().pushPose();
+                        event.graphics().pose().setIdentity();
+                        event.graphics().pose().translate(xpl + xCenterOffset, yp, 0);
+                        event.getGuiGraphics().renderItem(livingEntity, items.get(i), 0, 0, 0);
+                        event.getGuiGraphics().renderItemDecorations(mc.font, items.get(i), 0, 0);
+                        event.graphics().pose().popPose();
                         xpl += enchantmentWidths.get(i);
                     }
 
@@ -363,6 +364,7 @@ public class EntityTitleController {
         }
 
         poseStack.popPose();
+        RenderSystem.setShaderColor(1, 1, 1, 1);
     }
 
     private StylizedText getEntityText(EntityEntry entry) {

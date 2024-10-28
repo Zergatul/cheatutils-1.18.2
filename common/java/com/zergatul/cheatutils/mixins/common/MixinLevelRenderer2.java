@@ -1,6 +1,5 @@
 package com.zergatul.cheatutils.mixins.common;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.zergatul.cheatutils.common.Events;
 import com.zergatul.cheatutils.common.events.RenderWorldLayerEvent;
 import net.minecraft.client.Minecraft;

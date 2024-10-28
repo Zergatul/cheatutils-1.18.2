@@ -9,6 +9,7 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(BlockBehaviour.class)
 public interface BlockBehaviourAccessor {
+
     @Invoker("canSurvive")
     boolean canSurvive_CU(BlockState p_60525_, LevelReader p_60526_, BlockPos p_60527_);
 }

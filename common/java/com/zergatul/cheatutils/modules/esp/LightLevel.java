@@ -1,5 +1,6 @@
 package com.zergatul.cheatutils.modules.esp;
 
+import com.mojang.blaze3d.buffers.BufferUsage;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.datafixers.util.Pair;
@@ -17,6 +18,7 @@ import com.zergatul.cheatutils.common.events.RenderWorldLastEvent;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.CoreShaders;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -72,7 +74,7 @@ public class LightLevel implements Module {
             textures[i] = ResourceLocation.fromNamespaceAndPath(ModMain.MODID, "textures/light-level-" + i + ".png");
         }
 
-        RenderSystem.recordRenderCall(() -> vertexBuffer = new VertexBuffer(VertexBuffer.Usage.DYNAMIC));
+        RenderSystem.recordRenderCall(() -> vertexBuffer = new VertexBuffer(BufferUsage.DYNAMIC_WRITE));
 
         Events.AfterRenderWorld.add(this::render);
         Events.RawChunkLoaded.add(this::onChunkLoaded);
@@ -112,7 +114,7 @@ public class LightLevel implements Module {
         RenderSystem.enableDepthTest();
         RenderSystem.enableCull();
         RenderSystem.enableBlend();
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShader(CoreShaders.POSITION_TEX);
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
 
         Direction direction = Direction.fromYRot(camera.getYRot());
@@ -150,7 +152,7 @@ public class LightLevel implements Module {
                 bufferBuilder.addVertex(x2, y, z2).setUv(u[2], v[2]);
                 bufferBuilder.addVertex(x2, y, z1).setUv(u[3], v[3]);
 
-                RenderHelper.drawBuffer(vertexBuffer, bufferBuilder, event.getPose(), event.getProjection(), GameRenderer.getPositionTexShader());
+                RenderHelper.drawBuffer(vertexBuffer, bufferBuilder, event.getPose(), event.getProjection(), CoreShaders.POSITION_TEX);
             }
         }
 
@@ -190,7 +192,7 @@ public class LightLevel implements Module {
         RenderSystem.disableDepthTest();
         GL11.glEnable(GL11.GL_LINE_SMOOTH);
 
-        RenderHelper.drawBuffer(vertexBuffer, buffer, event.getPose(), event.getProjection(), GameRenderer.getPositionColorShader());
+        RenderHelper.drawBuffer(vertexBuffer, buffer, event.getPose(), event.getProjection(), CoreShaders.POSITION_COLOR);
 
         RenderSystem.disableBlend();
         RenderSystem.enableCull();

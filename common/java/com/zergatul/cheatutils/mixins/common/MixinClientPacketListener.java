@@ -19,9 +19,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ClientPacketListener.class)
 public abstract class MixinClientPacketListener {
 
-    @Shadow public abstract Connection getConnection();
-
-    @Shadow protected abstract ParseResults<SharedSuggestionProvider> parseCommand(String p_249982_);
+    @Shadow
+    public abstract Connection getConnection();
 
     @ModifyVariable(
             at = @At("HEAD"),

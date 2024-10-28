@@ -129,7 +129,7 @@ public class Scaffold implements Module {
 
         InteractionResult result = mc.gameMode.useItemOn(mc.player, hand, hit);
         if (result.consumesAction()) {
-            if (result.shouldSwing()) {
+            if (result instanceof InteractionResult.Success success && success.swingSource() == InteractionResult.SwingSource.CLIENT) {
                 mc.player.swing(hand);
             }
         }
