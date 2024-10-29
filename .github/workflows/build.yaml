@@ -1,0 +1,78 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - '1.21.[0-9]'
+      - '1.21.3-workflow'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'adopt'
+          java-version: '21'
+
+      - name: Change permissions for gradlew
+        run: |
+          chmod +x ./mixin-plugin/annotation-processor/gradlew
+          chmod +x ./fabric/gradlew
+          chmod +x ./forge/gradlew
+          chmod +x ./neoforge/gradlew
+
+      - name: Build Annotation Processor
+        run: |
+          pushd ./mixin-plugin/annotation-processor
+          ./gradlew build
+          popd
+
+      - name: Build Forge
+        run: |
+          pushd ./forge
+          ./gradlew build
+          popd
+
+      - name: Build Fabric
+        run: |
+          pushd ./fabric
+          ./gradlew build
+          popd
+
+      - name: Build NeoForge
+        run: |
+          pushd ./neoforge
+          ./gradlew build
+          popd
+
+      - name: Upload Forge artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: forge
+          path: ./forge/build/libs/*.jar
+          compression-level: 0
+          if-no-files-found: error
+
+      - name: Upload Fabric artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: fabric
+          path: ./fabric/build/libs/*.jar
+          compression-level: 0
+          if-no-files-found: error
+
+      - name: Upload neoforge artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: neoforge
+          path: ./neoforge/build/libs/*.jar
+          compression-level: 0
+          if-no-files-found: error
