@@ -30,17 +30,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(LevelRenderer.class)
 public abstract class MixinLevelRenderer {
 
-    @Shadow
-    @Final
-    private RenderBuffers renderBuffers;
-
-    @Shadow
-    @Final
-    private Minecraft minecraft;
-
-    @Shadow
-    protected abstract void renderEntity(Entity p_109518_, double p_109519_, double p_109520_, double p_109521_, float p_109522_, PoseStack p_109523_, MultiBufferSource p_109524_);
-
     @ModifyArg(
             method = "renderLevel",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;setupRender(Lnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/culling/Frustum;ZZ)V"),
@@ -50,47 +39,6 @@ public abstract class MixinLevelRenderer {
             return true;
         } else {
             return isSpectator;
-        }
-    }
-
-    @Inject(
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;endLastBatch()V", ordinal = 0),
-            method = "lambda$addMainPass$1")
-    private void onAfterRenderEntities(
-            FogParameters fog,
-            DeltaTracker deltaTracker,
-            Camera camera,
-            ProfilerFiller profiler,
-            Matrix4f pose,
-            Matrix4f projection,
-            ResourceHandle<?> handle1,
-            ResourceHandle<?> handle2,
-            ResourceHandle<?> handle3,
-            ResourceHandle<?> handle4,
-            Frustum frustum,
-            boolean p_362593_,
-            ResourceHandle<?> handle5,
-            CallbackInfo ci
-    ) {
-        if (FakePlayer.list.isEmpty()) {
-            return;
-        }
-        LocalPlayer player = this.minecraft.player;
-        if (player == null) {
-            return;
-        }
-
-        MultiBufferSource.BufferSource source = this.renderBuffers.bufferSource();
-        Vec3 view = camera.getPosition();
-        double x = view.x;
-        double y = view.y;
-        double z = view.z;
-        for (FakePlayer fake : FakePlayer.list) {
-            if (fake.distanceToSqr(player) > 1) {
-                // is new PoseStack good for compatibility?
-                // capture local var?
-                this.renderEntity(fake, x, y, z, 1, new PoseStack(), source);
-            }
         }
     }
 

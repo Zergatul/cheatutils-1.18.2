@@ -5,7 +5,7 @@ plugins {
     id 'eclipse'
     id 'idea'
     id 'maven-publish'
-    id 'net.neoforged.moddev' version '1.0.14'
+    id 'net.neoforged.moddev' version '1.0.21'
 }
 
 tasks.named('wrapper', Wrapper).configure {
@@ -154,7 +154,7 @@ tasks.withType(ProcessResources).configureEach {
 
 jar {
     exclude("com/zergatul/cheatutils/utils/mappings/*")
-    exclude("com/zergatul/cheatutils/mixins/common/MixinCamera.class")
+    exclude("com/zergatul/cheatutils/mixins/common/MixinLevelRenderer3.class")
 }
 
 tasks.withType(JavaCompile).configureEach {
