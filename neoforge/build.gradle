@@ -154,7 +154,6 @@ tasks.withType(ProcessResources).configureEach {
 
 jar {
     exclude("com/zergatul/cheatutils/utils/mappings/*")
-    exclude("com/zergatul/cheatutils/mixins/common/MixinLevelRenderer3.class")
 }
 
 tasks.withType(JavaCompile).configureEach {

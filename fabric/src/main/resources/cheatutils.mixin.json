@@ -62,7 +62,6 @@
     "common.MixinLevelChunk",
     "common.MixinLevelRenderer",
     "common.MixinLevelRenderer2",
-    "common.MixinLevelRenderer3",
     "common.MixinLivingEntity",
     "common.MixinLocalPlayer",
     "common.MixinMinecraft",
@@ -85,6 +84,7 @@
     "fabric.MixinGameRenderer",
     "fabric.MixinGuiGraphics",
     "fabric.MixinKeyboardHandler",
+    "fabric.MixinLevelRenderer",
     "fabric.MixinMultiPlayerGameMode",
     "fabric.MixinScreen",
 

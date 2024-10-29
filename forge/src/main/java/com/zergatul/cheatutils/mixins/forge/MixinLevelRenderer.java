@@ -1,4 +1,4 @@
-package com.zergatul.cheatutils.mixins.neoforge;
+package com.zergatul.cheatutils.mixins.forge;
 
 import com.mojang.blaze3d.resource.ResourceHandle;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -6,7 +6,6 @@ import com.zergatul.cheatutils.entities.FakePlayer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.FogParameters;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -14,7 +13,6 @@ import net.minecraft.client.renderer.RenderBuffers;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -39,7 +37,7 @@ public abstract class MixinLevelRenderer {
 
     @Inject(
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;endLastBatch()V", ordinal = 0),
-            method = "lambda$addMainPass$2",
+            method = "lambda$addMainPass$1",
             require = 0)
     private void onAfterRenderEntities(
             FogParameters fog,

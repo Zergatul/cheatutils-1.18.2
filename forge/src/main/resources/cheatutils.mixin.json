@@ -63,7 +63,6 @@
     "common.MixinLevelChunk",
     "common.MixinLevelRenderer",
     "common.MixinLevelRenderer2",
-    "common.MixinLevelRenderer3",
     "common.MixinLivingEntity",
     "common.MixinLocalPlayer",
     "common.MixinMinecraft",
@@ -85,6 +84,7 @@
     "forge.accessors.GuiGraphicsAccessor",
     "forge.MixinKeyboardHandler",
     "forge.MixinKeyMapping",
+    "forge.MixinLevelRenderer",
     "forge.MixinLightTexture",
     "forge.MixinModVersions",
     "forge.MixinMultiPlayerGameMode"
