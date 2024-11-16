@@ -39,7 +39,7 @@ public class EntityEsp implements Module {
     private final Minecraft mc = Minecraft.getInstance();
     private final Map<EntityEspConfig, List<BufferedVerticesEntry>> overlayBufferedVertices = new HashMap<>();
     private final Map<EntityEspConfig, List<BufferedVerticesEntry>> outlineBufferedVertices = new HashMap<>();
-    private final List<EntityScriptResult> scriptResults = new ArrayList<>();
+    private final Map<EntityScriptResultKey, EntityScriptResult> scriptResults = new HashMap<>();
 
     private EntityEsp() {
         Events.BeforeRenderWorld.add(this::onBeforeRender);
@@ -111,10 +111,9 @@ public class EntityEsp implements Module {
             return null;
         }
 
-        for (EntityScriptResult result : scriptResults) {
-            if (result.config == config && result.id == entity.getId()) {
-                return result.title;
-            }
+        EntityScriptResult result = scriptResults.get(new EntityScriptResultKey(entity.getId(), config));
+        if (result != null) {
+            return result.title;
         }
 
         return executeScript(config, entity).title;
@@ -358,10 +357,9 @@ public class EntityEsp implements Module {
             return false;
         }
 
-        for (EntityScriptResult result : scriptResults) {
-            if (result.config == config && result.id == entity.getId()) {
-                return predicate.test(result);
-            }
+        EntityScriptResult result = scriptResults.get(new EntityScriptResultKey(entity.getId(), config));
+        if (result != null) {
+            return predicate.test(result);
         }
 
         return predicate.test(executeScript(config, entity));
@@ -370,16 +368,9 @@ public class EntityEsp implements Module {
     private EntityScriptResult executeScript(EntityEspConfig config, Entity entity) {
         assert config.script != null;
 
-        EntityScriptResult result = new EntityScriptResult();
-        EntityScriptResult.current = result;
-        result.id = entity.getId();
-        result.config = config;
-        scriptResults.add(result);
-
-        config.script.accept(entity.getId(), EntityEspEvent.instance);
-
-        EntityScriptResult.current = null;
-
+        EntityScriptResult result = new EntityScriptResult(entity.getId(), config);
+        scriptResults.put(new EntityScriptResultKey(entity.getId(), config), result);
+        config.script.accept(entity.getId(), new EntityEspEvent(result));
         return result;
     }
 
@@ -548,14 +539,42 @@ public class EntityEsp implements Module {
 
     public static class EntityScriptResult {
 
-        public static EntityScriptResult current;
-
-        public int id;
-        public EntityEspConfig config;
+        public final int id;
+        public final EntityEspConfig config;
         public boolean tracerDisabled;
         public boolean outlineDisabled;
         public boolean overlayDisabled;
         public boolean collisionBoxDisabled;
         public StylizedText title;
+
+        public EntityScriptResult(int id, EntityEspConfig config) {
+            this.id = id;
+            this.config = config;
+        }
+    }
+
+    private static class EntityScriptResultKey {
+
+        private final int id;
+        private final EntityEspConfig config;
+
+        public EntityScriptResultKey(int id, EntityEspConfig config) {
+            this.id = id;
+            this.config = config;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof EntityScriptResultKey other) {
+                return other.id == id && other.config == config;
+            } else {
+                return false;
+            }
+        }
+
+        @Override
+        public int hashCode() {
+            return 31 * id + config.hashCode();
+        }
     }
 }
