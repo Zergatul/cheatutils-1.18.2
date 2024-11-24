@@ -25,8 +25,10 @@ public class ElytraFly implements Module {
         Events.ClientTickEnd.add(this::onClientTickEnd);
     }
 
-    public Vec3 onBeforeMove(MoverType type, Vec3 delta) {
-        if (type == MoverType.SELF && applySpeedLimit) {
+    public Vec3 onModifyDeltaMove(Vec3 delta) {
+        assert mc.player != null;
+
+        if (applySpeedLimit) {
             ElytraHackConfig config = ConfigStore.instance.getConfig().elytraHackConfig;
             double speed = delta.length() * 20;
             if (speed > config.maxSpeed) {

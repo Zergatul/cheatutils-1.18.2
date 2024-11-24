@@ -16,8 +16,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import java.util.function.Predicate;
+import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 @Mixin(LocalPlayer.class)
 public abstract class MixinLocalPlayer extends AbstractClientPlayer {
@@ -130,10 +129,15 @@ public abstract class MixinLocalPlayer extends AbstractClientPlayer {
         }
     }
 
-    @Override
-    public void move(MoverType type, Vec3 delta) {
-        delta = ElytraFly.instance.onBeforeMove(type, delta);
-        super.move(type, delta);
+    @ModifyArgs(
+            method = "move",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/AbstractClientPlayer;move(Lnet/minecraft/world/entity/MoverType;Lnet/minecraft/world/phys/Vec3;)V"))
+    private void onModifyDeltaMove(Args args) {
+        MoverType type = args.get(0);
+        Vec3 delta = args.get(1);
+        if (type == MoverType.SELF) {
+            args.set(1, ElytraFly.instance.onModifyDeltaMove(delta));
+        }
     }
 
     @SuppressWarnings("deprecation")
