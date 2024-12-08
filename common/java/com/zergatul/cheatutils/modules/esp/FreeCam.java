@@ -320,7 +320,7 @@ public class FreeCam implements Module {
             while (mc.options.keyTogglePerspective.consumeClick()) {
                 // consume clicks
             }
-            playerInput.tick(false, 0);
+            playerInput.tick();
         }
     }
 

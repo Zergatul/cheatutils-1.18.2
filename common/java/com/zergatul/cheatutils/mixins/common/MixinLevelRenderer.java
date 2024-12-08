@@ -49,7 +49,6 @@ public abstract class MixinLevelRenderer {
             boolean renderBlockOutline,
             Camera camera,
             GameRenderer gameRenderer,
-            LightTexture lightTexture,
             Matrix4f pose,
             Matrix4f projection,
             CallbackInfo info
@@ -64,7 +63,6 @@ public abstract class MixinLevelRenderer {
             boolean renderBlockOutline,
             Camera camera,
             GameRenderer gameRenderer,
-            LightTexture lightTexture,
             Matrix4f pose,
             Matrix4f projection,
             CallbackInfo info

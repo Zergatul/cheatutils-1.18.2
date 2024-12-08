@@ -5,6 +5,7 @@ import com.zergatul.cheatutils.configs.*;
 import com.zergatul.cheatutils.controllers.PlayerMotionController;
 import com.zergatul.cheatutils.helpers.MixinLocalPlayerHelper;
 import com.zergatul.cheatutils.modules.hacks.ElytraFly;
+import com.zergatul.mixin.ModifyMethodReturnValue;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
@@ -84,16 +85,15 @@ public abstract class MixinLocalPlayer extends AbstractClientPlayer {
         }
     }
 
-    @ModifyArg(
-            method = "aiStep()V",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/ClientInput;tick(ZF)V"),
-            index = 0)
-    private boolean onAiStepInputTick(boolean isMovingSlowly) {
-        var config = ConfigStore.instance.getConfig().movementHackConfig;
-        if (config.disableCrouchingSlowdown) {
+    @ModifyMethodReturnValue(
+            method = "aiStep",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isMovingSlowly()Z"))
+    private static boolean onAiStepCrouchCheck(boolean isMovingSlowly) {
+        if (ConfigStore.instance.getConfig().movementHackConfig.disableCrouchingSlowdown) {
             return false;
+        } else {
+            return isMovingSlowly;
         }
-        return isMovingSlowly;
     }
 
     @ModifyConstant(method = "aiStep()V", constant = @Constant(floatValue = 3.0f))

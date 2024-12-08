@@ -142,10 +142,8 @@ public class AutoCraft {
                         Optional<List<Ingredient>> ingredients = recipe.craftingRequirements();
                         if (ingredients.isPresent()) {
                             for (Ingredient ingredient : ingredients.get()) {
-                                for (Holder<Item> holder : ingredient.items()) {
-                                    if (entry.has(context, holder.value())) {
-                                        continue recipesLoop;
-                                    }
+                                if (ingredient.items().anyMatch(holder -> entry.has(context, holder.value()))) {
+                                    continue recipesLoop;
                                 }
                             }
                         }
@@ -179,11 +177,11 @@ public class AutoCraft {
                 }
             }
             if (!has) {
-                for (Holder<Item> holder : ingredient.items()) {
+                ingredient.items().forEach(holder -> {
                     if (!list.contains(holder.value())) {
                         list.add(holder.value());
                     }
-                }
+                });
             }
         }
         return list;
