@@ -7,5 +7,18 @@
         <div>
             <switch-checkbox v-model="config.enabled" @change="update()">Enabled</switch-checkbox>
         </div>
+
+        <fieldset>
+            <legend>
+                <switch-checkbox v-model="config.autoRestartOnIdle" @change="update()">Auto Restart On Idle</switch-checkbox>
+            </legend>
+            <div class="flex-row">
+                <span class="field-description">Idle timeout (seconds):</span>
+                <input type="text" class="w4" v-model="config.idleTimeout" @change="update()">
+            </div>
+            <div class="section-description">
+                If there was no fish or module skipped the fish during specified time, it will recast fishing rod.
+            </div>
+        </fieldset>
     </div>
 </div>
