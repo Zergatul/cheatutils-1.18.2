@@ -1,9 +1,6 @@
 package com.zergatul.cheatutils.scripting;
 
-import com.zergatul.cheatutils.scripting.types.EnchantmentWrapper;
-import com.zergatul.cheatutils.scripting.types.ItemStackWrapper;
-import com.zergatul.cheatutils.scripting.types.ItemWrapper;
-import com.zergatul.cheatutils.scripting.types.Position3d;
+import com.zergatul.cheatutils.scripting.types.*;
 import com.zergatul.scripting.compiler.CompilationParameters;
 import com.zergatul.scripting.compiler.CompilationParametersBuilder;
 import com.zergatul.scripting.compiler.VisibilityChecker;
@@ -67,6 +64,7 @@ public enum ScriptType {
                 .addCustomType(ItemStackWrapper.class)
                 .addCustomType(ItemWrapper.class)
                 .addCustomType(Position3d.class)
+                .addCustomType(BlockPosWrapper.class)
                 .setInterface(funcInterface)
                 .setAsyncReturnType(asyncReturnType)
                 .setVisibilityChecker(new VisibilityChecker() {

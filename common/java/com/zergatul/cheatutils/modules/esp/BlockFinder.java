@@ -20,6 +20,7 @@ public class BlockFinder {
     public static final BlockFinder instance = new BlockFinder();
 
     public final Map<BlockEspConfig, Set<BlockPos>> blocks = new ConcurrentHashMap<>();
+    public final Set<BlockPos> blackList = ConcurrentHashMap.newKeySet();
 
     private BlockFinder() {
         Events.ChunkLoaded.add(this::onChunkLoaded);
@@ -51,6 +52,13 @@ public class BlockFinder {
                 onChunkLoaded(chunk);
             }
         }, BlockEventsProcessor.instance.getExecutor());
+    }
+
+    public void addBlackList(BlockPos pos) {
+        BlockFinder.instance.blackList.add(pos);
+        for (Set<BlockPos> set : blocks.values()) {
+            set.remove(pos);
+        }
     }
 
     private void onChunkLoaded(SnapshotChunk chunk) {
@@ -129,7 +137,10 @@ public class BlockFinder {
         if (config != null) {
             Set<BlockPos> set = blocks.get(config);
             if (set != null) {
-                set.add(new BlockPos(x, y, z));
+                BlockPos pos = new BlockPos(x, y, z);
+                if (!blackList.contains(pos)) {
+                    set.add(pos);
+                }
             }
         }
     }

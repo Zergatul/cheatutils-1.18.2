@@ -6,6 +6,7 @@ import com.zergatul.cheatutils.mixins.common.accessors.MultiPlayerGameModeAccess
 import com.zergatul.cheatutils.scripting.ApiVisibility;
 import com.zergatul.cheatutils.scripting.ApiType;
 import com.zergatul.cheatutils.scripting.types.Position3d;
+import com.zergatul.cheatutils.scripting.types.BlockPosWrapper;
 import com.zergatul.cheatutils.utils.InputBuilder;
 import com.zergatul.cheatutils.utils.Rotation;
 import com.zergatul.cheatutils.utils.RotationUtils;
@@ -365,6 +366,14 @@ public class PlayerApi {
             }
 
             return mc.hitResult.getType() == HitResult.Type.BLOCK;
+        }
+
+        public BlockPosWrapper getBlockPos() {
+            if (mc.hitResult instanceof BlockHitResult hitResult) {
+                return new BlockPosWrapper(hitResult.getBlockPos());
+            } else {
+                return new BlockPosWrapper(0, 0, 0);
+            }
         }
 
         public int getBlockX() {
