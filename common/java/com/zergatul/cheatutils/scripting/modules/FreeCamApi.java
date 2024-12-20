@@ -100,7 +100,6 @@ public class FreeCamApi {
         FreeCam.instance.toggle();
     }
 
-
     @MethodDescription("""
             Locks Free Cam in current position and transfers control to your character
             """)

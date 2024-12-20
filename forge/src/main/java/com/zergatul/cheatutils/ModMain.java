@@ -98,6 +98,7 @@ public class ModMain {
         register(Containers.instance);
         register(DelayedRun.instance);
         register(AntiHunger.instance);
+        register(AimAssist.instance);
 
         register(TickEndExecutor.instance);
     }

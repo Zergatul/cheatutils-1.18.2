@@ -157,4 +157,9 @@ public abstract class MixinMinecraft {
     private void onResize(CallbackInfo info) {
         Events.WindowResize.trigger();
     }
+
+    @Inject(method = "runTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;render(Lnet/minecraft/client/DeltaTracker;Z)V"))
+    private void onBeforeGameRender(boolean p_91384_, CallbackInfo info) {
+        Events.BeforeGameRender.trigger();
+    }
 }
