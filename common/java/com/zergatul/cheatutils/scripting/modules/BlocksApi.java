@@ -7,11 +7,13 @@ import com.zergatul.cheatutils.modules.esp.BlockFinder;
 import com.zergatul.cheatutils.scripting.ApiType;
 import com.zergatul.cheatutils.scripting.ApiVisibility;
 import com.zergatul.cheatutils.scripting.types.BlockPosWrapper;
+import com.zergatul.cheatutils.utils.ColorUtils;
 import com.zergatul.scripting.MethodDescription;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 
+import java.awt.*;
 import java.util.Set;
 
 @SuppressWarnings("unused")
@@ -39,6 +41,54 @@ public class BlocksApi {
         }
 
         config.enabled = !config.enabled;
+        ConfigStore.instance.requestWrite();
+    }
+
+    @ApiVisibility(ApiType.UPDATE)
+    public void setTracerColor(String blockId, String color) {
+        Color colorValue = ColorUtils.parseColor2(color);
+        if (colorValue == null) {
+            return;
+        }
+
+        BlockEspConfig config = getConfig(blockId);
+        if (config == null) {
+            return;
+        }
+
+        config.tracerColor = colorValue;
+        ConfigStore.instance.requestWrite();
+    }
+
+    @ApiVisibility(ApiType.UPDATE)
+    public void setBoundingBoxColor(String blockId, String color) {
+        Color colorValue = ColorUtils.parseColor2(color);
+        if (colorValue == null) {
+            return;
+        }
+
+        BlockEspConfig config = getConfig(blockId);
+        if (config == null) {
+            return;
+        }
+
+        config.outlineColor = colorValue;
+        ConfigStore.instance.requestWrite();
+    }
+
+    @ApiVisibility(ApiType.UPDATE)
+    public void setOverlayColor(String blockId, String color) {
+        Color colorValue = ColorUtils.parseColor2(color);
+        if (colorValue == null) {
+            return;
+        }
+
+        BlockEspConfig config = getConfig(blockId);
+        if (config == null) {
+            return;
+        }
+
+        config.overlayColor = colorValue;
         ConfigStore.instance.requestWrite();
     }
 

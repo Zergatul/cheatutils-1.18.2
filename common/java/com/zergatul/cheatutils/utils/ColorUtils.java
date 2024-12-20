@@ -42,10 +42,10 @@ public class ColorUtils {
                 }
                 return null;
             }
-            return  Integer.parseInt(str.substring(1, 3), 16) << 24 |
-                    Integer.parseInt(str.substring(3, 5), 16) << 16 |
-                    Integer.parseInt(str.substring(5, 7), 16) << 8 |
-                    Integer.parseInt(str.substring(7, 9), 16);
+            return  Integer.parseInt(str.substring(7, 9), 16) << 24 |
+                    Integer.parseInt(str.substring(1, 3), 16) << 16 |
+                    Integer.parseInt(str.substring(3, 5), 16) << 8 |
+                    Integer.parseInt(str.substring(5, 7), 16);
         }
         return null;
     }
@@ -73,6 +73,26 @@ public class ColorUtils {
                     Integer.parseInt(str.substring(1, 3), 16),
                     Integer.parseInt(str.substring(3, 5), 16),
                     Integer.parseInt(str.substring(5, 7), 16));
+        }
+        if (str.length() == 9) {
+            if (str.charAt(0) != '#') {
+                return null;
+            }
+            for (int i = 1; i < 9; i++) {
+                char ch = str.charAt(i);
+                if ('0' <= ch && ch <= '9') {
+                    continue;
+                }
+                if ('a' <= ch && ch <= 'f') {
+                    continue;
+                }
+                return null;
+            }
+            return new Color(
+                    Integer.parseInt(str.substring(1, 3), 16),
+                    Integer.parseInt(str.substring(3, 5), 16),
+                    Integer.parseInt(str.substring(5, 7), 16),
+                    Integer.parseInt(str.substring(7, 9), 16));
         }
         return null;
     }

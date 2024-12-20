@@ -61,6 +61,31 @@ public class InventoryApi {
     }
 
     @MethodDescription("""
+            Searches for item on hotbar and switches to it. Returns false if it cannot find such item.
+            """)
+    @ApiVisibility(ApiType.ACTION)
+    public boolean equipMainHand(String itemId) {
+        if (mc.player == null) {
+            return false;
+        }
+
+        Item item = Registries.ITEMS.safeParse(itemId);
+        if (item == null) {
+            return false;
+        }
+
+        Inventory inventory = mc.player.getInventory();
+        for (int i = 0; i < 9; i++) {
+            if (inventory.getItem(i).is(item)) {
+                inventory.selected = i;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    @MethodDescription("""
             Equips item to offhand
             """)
     @ApiVisibility(ApiType.ACTION)
