@@ -65,6 +65,10 @@ public enum ScriptType {
                 .addCustomType(ItemWrapper.class)
                 .addCustomType(Position3d.class)
                 .addCustomType(BlockPosWrapper.class)
+                .addCustomType(HttpRequestWrapper.class)
+                .addCustomType(HttpRequestBuilderWrapper.class)
+                .addCustomType(HttpResponseWrapper.class)
+                .addCustomType(HttpHeader.class)
                 .setInterface(funcInterface)
                 .setAsyncReturnType(asyncReturnType)
                 .setVisibilityChecker(new VisibilityChecker() {

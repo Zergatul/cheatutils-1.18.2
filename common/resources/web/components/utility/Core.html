@@ -15,5 +15,15 @@
                 Default value: 5005
             </div>
         </fieldset>
+
+        <fieldset>
+            <legend>
+                <switch-checkbox v-model="config.advancedScripting" @change="update()">Advanced Scripting</switch-checkbox>
+            </legend>
+            <div class="section-description">
+                Allows to use <b>http</b>, <b>os</b> APIs from scripting.
+                These methods are considered more dangereous, and if you don't understand what script is doing and just copy paste something from internet, it can potentially do as much as installing malware or stealing your data.
+            </div>
+        </fieldset>
     </div>
 </div>
