@@ -78,5 +78,6 @@ public class Root {
     public static ContainersApi containers = new ContainersApi();
     public static UIApi ui = new UIApi();
     public static HttpApi http = new HttpApi();
+    public static OsApi os = new OsApi();
     public static DebugApi debug = new DebugApi();
 }

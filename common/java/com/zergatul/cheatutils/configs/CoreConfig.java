@@ -5,6 +5,7 @@ import com.zergatul.cheatutils.utils.MathUtils;
 public class CoreConfig implements ValidatableConfig {
 
     public int port;
+    public boolean advancedScripting;
 
     public CoreConfig() {
         port = 5005;

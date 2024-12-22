@@ -1,7 +1,8 @@
 import * as http from '/http.js'
+import { components } from '/components.js'
 
 export function createComponent(template) {
-    return {
+    const args = {
         template: template,
         created() {
             http.get('/api/core').then(response => {
@@ -26,4 +27,6 @@ export function createComponent(template) {
             }
         }
     };
+    components.add(args, 'SwitchCheckbox');
+    return args;
 }
