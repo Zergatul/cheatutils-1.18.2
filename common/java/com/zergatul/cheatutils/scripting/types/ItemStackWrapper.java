@@ -67,6 +67,15 @@ public class ItemStackWrapper {
         return tooltip.value();
     }
 
+    @Getter(name = "nbt")
+    public String getNbt() {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.level == null) {
+            return "";
+        }
+        return inner.save(mc.level.registryAccess()).getAsString();
+    }
+
     private EnchantmentWrapper[] getEnchantmentsInternal() {
         ItemEnchantments enchantments;
         if (inner.is(Items.ENCHANTED_BOOK)) {
