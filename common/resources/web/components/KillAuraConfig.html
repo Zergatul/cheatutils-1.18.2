@@ -20,12 +20,36 @@
 
             <fieldset>
                 <legend>
-                    Tick Interval
+                    Delay Method
                 </legend>
-                <div class="input-section">
-                    <input type="text" v-model="config.attackTickInterval" @change="update()">
-                    <div class="section-description">
-                        How often kill aura attacks. 1 = fastest (attack every tick), 20 = attack once a second and so on. In other words: attack every X ticks.
+                <div>
+                    <div style="padding: 2px; display: flex;">
+                        <label>
+                            <input type="radio" name="method" value="ConstDelay" v-model="config.delayMode" @change="update()">
+                            <span class="text">Constant Tick Delay</span>
+                        </label>
+                    </div>
+                    <div style="padding: 2px; display: flex;">
+                        <label>
+                            <input type="radio" name="method" value="Cooldown" v-model="config.delayMode" @change="update()">
+                            <span class="text">Item Cooldown</span>
+                        </label>
+                    </div>
+
+                    <div class="input-section" v-if="config.delayMode == 'ConstDelay'">
+                        <span class="field-description">Tick Interval:</span>
+                        <input type="text" v-model="config.attackTickInterval" @change="update()">
+                        <div class="section-description">
+                            How often kill aura attacks. 1 = fastest (attack every tick), 20 = attack once a second, and so on. In other words: attack every X ticks.
+                        </div>
+                    </div>
+
+                    <div class="input-section" v-if="config.delayMode == 'Cooldown'">
+                        <span class="field-description">Extra Ticks:</span>
+                        <input type="text" v-model="config.extraTicks" @change="update()">
+                        <div class="section-description">
+                            Wait additional ticks once cooldown passed. Can be negative; in this case, the module will attack before cooldown ends.
+                        </div>
                     </div>
                 </div>
             </fieldset>
@@ -43,20 +67,30 @@
                 <legend>
                     Limit target coverage by angle
                 </legend>
-                <div class="input-section">
-                    <div>
-                        <span class="field-description">Delta horizontal angle:</span>
-                        <input type="text" v-model="config.maxHorizontalAngle" @change="update()">
-                    </div>
-                    <div>
-                        <span class="field-description">Delta vertical angle:</span>
-                        <input type="text" v-model="config.maxVerticalAngle" @change="update()">
-                    </div>
-                    <div class="section-description">
-                        In degrees. Value 180 means no limit. But it is better to leave field(s) empty for this purpose.<br>
-                        For every possible target module calculates how far you need to rotate to attack target. If this angle exceeds specified limit, module will not attack this target.<br>
-                        Note: module is not smart enough to attack on edges of hitbox. It always attacks center of entities bounding box. Angle is measured relatively to this point.
-                    </div>
+                <table>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <span class="field-description">Delta horizontal angle:</span>
+                            </td>
+                            <td>
+                                <input type="text" v-model="config.maxHorizontalAngle" @change="update()">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="field-description">Delta vertical angle:</span>
+                            </td>
+                            <td>
+                                <input type="text" v-model="config.maxVerticalAngle" @change="update()">
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="section-description">
+                    In degrees. Value 180 means no limit. But it is better to leave fields empty for this purpose.<br>
+                    For every possible target, the module calculates how far you need to rotate to attack the target. If this angle exceeds the specified limit, the module will not attack this target.<br>
+                    Note: the module is not smart enough to attack on edges of a hitbox. It always attacks the center of the entity's bounding box. Angle is measured relative to this point.
                 </div>
             </fieldset>
 
@@ -70,7 +104,7 @@
                     </label>
                 </legend>
                 <div class="section-description">
-                    Module attack all targets in range. Only first target (closest) receives full damage.
+                    The module attacks all targets in range. Only the first target (closest) receives full damage.
                 </div>
             </fieldset>
 
@@ -81,7 +115,7 @@
                     <button @click="openAddNew()">Add Priority Entry</button>
                     <button @click="openCreateNewCustomEntry()">Create Custom Priority Entry...</button>
                 </div>
-                <ul class="kill-aura-priority-list" v-if="state == 'list'">
+                <ul class="list-base kill-aura-priority-list" v-if="state == 'list'">
                     <li v-for="(entry, index) in config.priorities">
                         <div class="c0">
                             <input type="checkbox" class="switch"
@@ -109,7 +143,7 @@
                         v-model="search"
                         @input="filterPriorityList()">
                 </div>
-                <ul class="kill-aura-priority-list" v-if="state == 'add'">
+                <ul class="list-base kill-aura-priority-list" v-if="state == 'add'">
                     <li v-for="entry in priorityListFiltered">
                         <div class="c1">
                             <div class="text">{{ entry.name }}</div>
@@ -127,23 +161,38 @@
                         <button @click="state = 'list'">Back to list</button>
                         <button @click="createNewCustomEntry()">Create</button>
                     </div>
-                    <div style="margin-top: 16px;">
-                        <span class="text">Entry Name:</span>
-                        <input type="text" class="search" v-model="newCustomEntry.name">
-                    </div>
-                    <div>
-                        <span class="text">Description:</span>
-                        <input type="text" class="search" v-model="newCustomEntry.description">
-                    </div>
-                    <div>
-                        <span class="text">Class Name:</span>
-                        <input type="text" class="search" v-model="newCustomEntry.className">
-                    </div>
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <span class="text">Entry Name:</span>
+                                </td>
+                                <td>
+                                    <input type="text" class="search" v-model="newCustomEntry.name">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <span class="text">Description:</span>
+                                </td>
+                                <td>
+                                    <input type="text" class="search" v-model="newCustomEntry.description">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <span class="text">Class Name:</span>
+                                </td>
+                                <td>
+                                    <input type="text" class="search" v-model="newCustomEntry.className">
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                     <div class="section-description">
                         You can copy class name from Entity ESP all entities list. Example: net.minecraft.world.entity.animal.Cow
                     </div>
                 </div>
-
             </fieldset>
         </div>
     </div>
