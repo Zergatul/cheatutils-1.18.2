@@ -1,0 +1,57 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - '1.19.*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Build Forge
+        run: |
+          pushd ./forge
+          chmod +x ./gradlew
+          ./gradlew build
+          cd ./build/libs
+          mv ./zergatul.cheatutils-*.jar $(ls zergatul.cheatutils-*.jar | sed "s/\.jar$/-forge-$GITHUB_REF_NAME.jar/")
+          popd
+
+      - name: Build Fabric
+        run: |
+          pushd ./fabric
+          chmod +x ./gradlew
+          ./gradlew build
+          cd build/libs
+          rm ./zergatul.cheatutils-*-sources.jar
+          mv ./zergatul.cheatutils-*.jar $(ls zergatul.cheatutils-*.jar | sed "s/\.jar$/-fabric-$GITHUB_REF_NAME.jar/")
+          popd
+
+      - name: Upload Forge artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: forge
+          path: ./forge/build/libs/*.jar
+          compression-level: 0
+          if-no-files-found: error
+
+      - name: Upload Fabric artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: fabric
+          path: ./fabric/build/libs/*.jar
+          compression-level: 0
+          if-no-files-found: error
