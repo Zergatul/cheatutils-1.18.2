@@ -31,7 +31,7 @@ jobs:
           pushd ./forge
           ./gradlew build
           cd build/libs
-          mv zergatul.cheatutils-*.jar $(ls zergatul.cheatutils-*.jar | sed "s/\.jar$/-forge-${GITHUB_REF}.jar/")
+          mv zergatul.cheatutils-*.jar $(ls zergatul.cheatutils-*.jar | sed "s/\.jar$/-forge-$GITHUB_REF.jar/")
           popd
 
       - name: Build Fabric
@@ -40,7 +40,7 @@ jobs:
           ./gradlew build
           cd build/libs
           rm zergatul.cheatutils-*-sources.jar
-          mv zergatul.cheatutils-*.jar $(ls zergatul.cheatutils-*.jar | sed "s/\.jar$/-fabric-${GITHUB_REF}.jar/")
+          mv zergatul.cheatutils-*.jar $(ls zergatul.cheatutils-*.jar | sed "s/\.jar$/-fabric-$GITHUB_REF.jar/")
           popd
 
       - name: Upload Forge artifacts
