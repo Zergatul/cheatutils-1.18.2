@@ -15,46 +15,47 @@ jobs:
         with:
           submodules: true
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
+      # - name: Setup Java
+      #   uses: actions/setup-java@v4
+      #   with:
+      #     distribution: temurin
+      #     java-version: 17
 
       - name: Change permissions for gradlew
         run: |
           chmod +x ./fabric/gradlew
           chmod +x ./forge/gradlew
+          echo "s/\.jar$/-forge-$GITHUB_REF.jar/"
 
-      - name: Build Forge
-        run: |
-          pushd ./forge
-          ./gradlew build
-          cd build/libs
-          mv zergatul.cheatutils-*.jar $(ls zergatul.cheatutils-*.jar | sed "s/\.jar$/-forge-$GITHUB_REF.jar/")
-          popd
+      # - name: Build Forge
+      #   run: |
+      #     pushd ./forge
+      #     ./gradlew build
+      #     cd build/libs
+      #     mv zergatul.cheatutils-*.jar $(ls zergatul.cheatutils-*.jar | sed "s/\.jar$/-forge-$GITHUB_REF.jar/")
+      #     popd
 
-      - name: Build Fabric
-        run: |
-          pushd ./fabric
-          ./gradlew build
-          cd build/libs
-          rm zergatul.cheatutils-*-sources.jar
-          mv zergatul.cheatutils-*.jar $(ls zergatul.cheatutils-*.jar | sed "s/\.jar$/-fabric-$GITHUB_REF.jar/")
-          popd
+      # - name: Build Fabric
+      #   run: |
+      #     pushd ./fabric
+      #     ./gradlew build
+      #     cd build/libs
+      #     rm zergatul.cheatutils-*-sources.jar
+      #     mv zergatul.cheatutils-*.jar $(ls zergatul.cheatutils-*.jar | sed "s/\.jar$/-fabric-$GITHUB_REF.jar/")
+      #     popd
 
-      - name: Upload Forge artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: forge
-          path: ./forge/build/libs/*.jar
-          compression-level: 0
-          if-no-files-found: error
+      # - name: Upload Forge artifacts
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: forge
+      #     path: ./forge/build/libs/*.jar
+      #     compression-level: 0
+      #     if-no-files-found: error
 
-      - name: Upload Fabric artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: fabric
-          path: ./fabric/build/libs/*.jar
-          compression-level: 0
-          if-no-files-found: error
+      # - name: Upload Fabric artifacts
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: fabric
+      #     path: ./fabric/build/libs/*.jar
+      #     compression-level: 0
+      #     if-no-files-found: error
