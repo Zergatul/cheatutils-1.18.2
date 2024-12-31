@@ -25,7 +25,7 @@ jobs:
         run: |
           chmod +x ./fabric/gradlew
           chmod +x ./forge/gradlew
-          echo "s/\.jar$/-forge-$GITHUB_REF.jar/"
+          echo "s/\.jar$/-forge-$GITHUB_REF_NAME.jar/"
 
       # - name: Build Forge
       #   run: |
