@@ -16,8 +16,14 @@ import java.util.function.Predicate;
 
 public class KillAuraConfig extends ModuleConfig implements ValidatableConfig {
 
-    public float maxRange;
+    public static final String ConstDelay = "ConstDelay";
+    public static final String Cooldown = "Cooldown";
+
+    public boolean overrideAttackRange;
+    public double maxRange;
+    public String delayMode;
     public int attackTickInterval;
+    public double extraTicks;
     public Double maxHorizontalAngle;
     public Double maxVerticalAngle;
     public ImmutableList<PriorityEntry> priorities;
@@ -25,8 +31,11 @@ public class KillAuraConfig extends ModuleConfig implements ValidatableConfig {
     public boolean attackAll;
 
     public KillAuraConfig() {
+        overrideAttackRange = true;
         maxRange = 6;
+        delayMode = Cooldown;
         attackTickInterval = 5;
+        extraTicks = 0;
         priorities = new ImmutableList<PriorityEntry>()
                 .add(PredefinedPriorityEntry.fromName("Enemies"))
                 .add(PredefinedPriorityEntry.fromName("Shulker Bullets"))
@@ -37,6 +46,7 @@ public class KillAuraConfig extends ModuleConfig implements ValidatableConfig {
     public void validate() {
         maxRange = MathUtils.clamp(maxRange, 1, 100);
         attackTickInterval = MathUtils.clamp(attackTickInterval, 1, 100);
+        extraTicks = MathUtils.clamp(extraTicks, -100, 100);
         if (maxHorizontalAngle != null) {
             maxHorizontalAngle = MathUtils.clamp(maxHorizontalAngle, 1, 180);
         }

@@ -69,7 +69,7 @@ public class KillAura implements Module {
             return;
         }
 
-        if (ticks - lastAttackTick < config.attackTickInterval) {
+        if (!shouldAttackNow(config)) {
             return;
         }
 
@@ -78,7 +78,7 @@ public class KillAura implements Module {
         int targetPriority = Integer.MAX_VALUE;
         double targetDistance2 = Double.MAX_VALUE;
 
-        float maxRange2 = config.maxRange * config.maxRange;
+        double maxRange2 = getRangeSquared(config);
         Vec3 eyePos = player.getEyePosition();
 
         for (Entity entity : world.entitiesForRendering()) {
@@ -146,7 +146,7 @@ public class KillAura implements Module {
 
     private int getPriority(KillAuraConfig config, Entity entity) {
         int i = 0;
-        for (KillAuraConfig.PriorityEntry entry: config.priorities) {
+        for (KillAuraConfig.PriorityEntry entry : config.priorities) {
             if (entry.enabled && entry.predicate.test(entity)) {
                 return i;
             }
@@ -174,6 +174,19 @@ public class KillAura implements Module {
             targets.clear();
 
             lastAttackTick = ticks;
+        }
+    }
+
+    private double getRangeSquared(KillAuraConfig config) {
+        double range = config.overrideAttackRange ? config.maxRange : 3.0;
+        return range * range;
+    }
+
+    private boolean shouldAttackNow(KillAuraConfig config) {
+        if (KillAuraConfig.Cooldown.equals(config.delayMode)) {
+            return mc.player.getAttackStrengthScale((float) -config.extraTicks) == 1;
+        } else {
+            return ticks - lastAttackTick >= config.attackTickInterval;
         }
     }
 }
