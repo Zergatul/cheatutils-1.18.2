@@ -7,11 +7,13 @@ import com.zergatul.cheatutils.scripting.types.ItemStackWrapper;
 import com.zergatul.cheatutils.scripting.types.Position3d;
 import com.zergatul.cheatutils.utils.ColorUtils;
 import com.zergatul.cheatutils.utils.EntityUtils;
+import com.zergatul.cheatutils.utils.JavaRandom;
 import com.zergatul.cheatutils.wrappers.ClassRemapper;
 import com.zergatul.scripting.MethodDescription;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.server.IntegratedServer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
@@ -20,23 +22,34 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NumericTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.progress.ChunkProgressListener;
+import net.minecraft.world.RandomSequences;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.CustomSpawner;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
+import net.minecraft.world.level.dimension.LevelStem;
+import net.minecraft.world.level.storage.LevelStorageSource;
+import net.minecraft.world.level.storage.ServerLevelData;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -516,6 +529,28 @@ public class GameApi {
             });
         }
 
+        @MethodDescription("""
+                Checks few simple spawn rules for mob type at specified coordinates.
+                This method doesn't check:
+                 - light conditions
+                 - structures bounds (we do not have them on client)
+                 - more complex rules like animals can spawn on grass
+                """)
+        public boolean canSpawnAt(String id, int x, int y, int z) {
+            if (mc.level == null) {
+                return false;
+            }
+            EntityType<?> type = Registries.ENTITY_TYPES.safeParse(id);
+            if (type == null) {
+                return false;
+            }
+            BlockPos pos = new BlockPos(x, y, z);
+            if (!SpawnPlacements.isSpawnPositionOk(type, mc.level, pos)) {
+                return false;
+            }
+            return mc.level.noBlockCollision(null, type.getSpawnAABB(x + 0.5, y, z + 0.5));
+        }
+
         private Function<Entity, ItemStackWrapper> getEquippedItem(EquipmentSlot slot) {
             return entity -> {
                 if (entity instanceof LivingEntity living) {
@@ -659,6 +694,20 @@ public class GameApi {
             }
 
             return mc.level.getBlockState(new BlockPos(x, y, z)).getFluidState().isSource();
+        }
+
+        public int getBlockLightLevel(int x, int y, int z) {
+            if (mc.level == null) {
+                return Integer.MIN_VALUE;
+            }
+            return mc.level.getBrightness(LightLayer.BLOCK, new BlockPos(x, y, z));
+        }
+
+        public int getSkyLightLevel(int x, int y, int z) {
+            if (mc.level == null) {
+                return Integer.MIN_VALUE;
+            }
+            return mc.level.getBrightness(LightLayer.SKY, new BlockPos(x, y, z));
         }
 
         @MethodDescription("""

@@ -10,6 +10,7 @@ import com.zergatul.cheatutils.modules.automation.VillagerRoller;
 import com.zergatul.cheatutils.modules.utilities.RenderUtilities;
 import com.zergatul.cheatutils.render.LineRenderer;
 import com.zergatul.cheatutils.scripting.BlockPosConsumer;
+import com.zergatul.cheatutils.scripting.ItemStackPredicate;
 import com.zergatul.cheatutils.utils.BlockPlacingMethod;
 import com.zergatul.cheatutils.utils.BlockUtils;
 import com.zergatul.cheatutils.utils.NearbyBlockEnumerator;
@@ -22,9 +23,12 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.phys.Vec3;
+
+import java.util.function.Predicate;
 
 public class BlockAutomation {
 
@@ -34,11 +38,11 @@ public class BlockAutomation {
     private final SlotSelector slotSelector = new SlotSelector();
     private BlockPosConsumer script;
     private String[] itemIds;
+    private Predicate<ItemStack> useItemPredicate;
     private InteractionHand hand;
     private BlockPlacingMethod method;
     private boolean breakCurrentBlock;
-    private String breakItemId;
-    private String breakEnchantmentId;
+    private Predicate<ItemStack> breakItemPredicate;
     private BlockPos currentDestroyingBlock;
     private BlockUtils.PlaceBlockPlan debugPlan;
     private volatile boolean debugStep;
@@ -53,26 +57,21 @@ public class BlockAutomation {
         this.script = script;
     }
 
-    public void useItem(String itemId, BlockPlacingMethod method) {
-        useItem(new String[] { itemId }, method);
-    }
-
-    public void useItem(String[] itemIds, BlockPlacingMethod method) {
+    public void useItem(Predicate<ItemStack> predicate, BlockPlacingMethod method) {
         this.hand = null;
-        this.itemIds = itemIds;
+        this.useItemPredicate = predicate;
         this.method = method;
     }
 
     public void useItem(InteractionHand hand, BlockPlacingMethod method) {
+        this.useItemPredicate = null;
         this.hand = hand;
-        this.itemIds = null;
         this.method = method;
     }
 
-    public void breakBlock(String itemId, String enchantmentId) {
+    public void breakBlock(Predicate<ItemStack> predicate) {
         this.breakCurrentBlock = true;
-        this.breakItemId = itemId;
-        this.breakEnchantmentId = enchantmentId;
+        this.breakItemPredicate = predicate;
     }
 
     public void placeOne() {
@@ -115,8 +114,7 @@ public class BlockAutomation {
         boolean actionPerformed = false;
 
         actionLoop:
-        while (actionTickCounter >= 1)
-        {
+        while (actionTickCounter >= 1) {
             actionTickCounter -= 1;
 
             if (mc.gameMode.isDestroying()) {
@@ -143,9 +141,10 @@ public class BlockAutomation {
             currentDestroyingBlock = null;
 
             for (BlockPos pos : NearbyBlockEnumerator.getPositions(eyePos, config.maxRange)) {
-                itemIds = null;
+                useItemPredicate = null;
                 hand = null;
                 breakCurrentBlock = false;
+                breakItemPredicate = null;
                 script.accept(pos.getX(), pos.getY(), pos.getZ());
 
                 if (breakCurrentBlock && !mc.level.isEmptyBlock(pos) && selectItemForBlockBreak(config)) {
@@ -171,32 +170,25 @@ public class BlockAutomation {
                             continue actionLoop;
                         }
                     }
-                } else if (itemIds != null) {
-                    for (String itemId : itemIds) {
-                        Item item = Registries.ITEMS.safeParse(itemId);
-                        if (item == null || item == Items.AIR) {
-                            continue;
-                        }
+                } else if (useItemPredicate != null) {
+                    int slot = slotSelector.selectItem(config, useItemPredicate);
+                    if (slot < 0) {
+                        continue;
+                    }
 
-                        int slot = slotSelector.selectItem(config, item);
-                        if (slot < 0) {
-                            continue;
-                        }
-
-                        BlockUtils.PlaceBlockPlan plan = BlockUtils.getPlacingPlan(pos, config.attachToAir, method);
-                        if (plan != null) {
-                            if (config.debugMode && !debugStep) {
-                                debugPlan = plan;
-                                break actionLoop;
-                                // TODO: test after actions per tick change?
-                            } else {
-                                debugPlan = null;
-                                debugStep = false;
-                                mc.player.getInventory().selected = slot;
-                                BlockUtils.applyPlacingPlan(plan, config.useShift);
-                                actionPerformed = true;
-                                continue actionLoop;
-                            }
+                    BlockUtils.PlaceBlockPlan plan = BlockUtils.getPlacingPlan(pos, config.attachToAir, method);
+                    if (plan != null) {
+                        if (config.debugMode && !debugStep) {
+                            debugPlan = plan;
+                            break actionLoop;
+                            // TODO: test after actions per tick change?
+                        } else {
+                            debugPlan = null;
+                            debugStep = false;
+                            mc.player.getInventory().selected = slot;
+                            BlockUtils.applyPlacingPlan(plan, config.useShift);
+                            actionPerformed = true;
+                            continue actionLoop;
                         }
                     }
                 }
@@ -211,30 +203,9 @@ public class BlockAutomation {
     }
 
     private boolean selectItemForBlockBreak(BlockAutomationConfig config) {
-        assert mc.level != null;
         assert mc.player != null;
 
-        if (breakItemId == null) {
-            return true;
-        }
-
-        Item item = Registries.ITEMS.getValue(ResourceLocation.parse(breakItemId));
-        if (item == Items.AIR) {
-            return false;
-        }
-
-        Holder<Enchantment> enchantment = null;
-        if (breakEnchantmentId != null) {
-            HolderLookup<Enchantment> lookup = mc.level.holderLookup(net.minecraft.core.registries.Registries.ENCHANTMENT);
-            ResourceLocation location = ResourceLocation.parse(breakEnchantmentId);
-            enchantment = lookup.listElements().filter(ref -> ref.key().location().equals(location)).findFirst().get();
-        }
-
-        final Holder<Enchantment> enchantment2 = enchantment;
-        int slot = slotSelector.selectItem(config, item, stack -> {
-            return enchantment2 == null || stack.getEnchantments().getLevel(enchantment2) > 0;
-        });
-
+        int slot = slotSelector.selectItem(config, breakItemPredicate);
         if (slot >= 0) {
             mc.player.getInventory().selected = slot;
             return true;

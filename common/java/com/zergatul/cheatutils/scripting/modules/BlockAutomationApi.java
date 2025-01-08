@@ -1,13 +1,18 @@
 package com.zergatul.cheatutils.scripting.modules;
 
+import com.zergatul.cheatutils.common.Registries;
 import com.zergatul.cheatutils.configs.BlockAutomationConfig;
 import com.zergatul.cheatutils.configs.ConfigStore;
 import com.zergatul.cheatutils.modules.scripting.BlockAutomation;
 import com.zergatul.cheatutils.scripting.ApiType;
 import com.zergatul.cheatutils.scripting.ApiVisibility;
+import com.zergatul.cheatutils.scripting.ItemStackPredicate;
+import com.zergatul.cheatutils.scripting.types.ItemStackWrapper;
 import com.zergatul.cheatutils.utils.BlockPlacingMethod;
 import com.zergatul.scripting.MethodDescription;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.Item;
 
 @SuppressWarnings("unused")
 public class BlockAutomationApi extends ModuleApi<BlockAutomationConfig> {
@@ -24,16 +29,10 @@ public class BlockAutomationApi extends ModuleApi<BlockAutomationConfig> {
             """)
     @ApiVisibility(ApiType.BLOCK_AUTOMATION)
     public void useItem(String itemId) {
-        BlockAutomation.instance.useItem(itemId, BlockPlacingMethod.ANY);
-    }
-
-    @MethodDescription("""
-            Uses one specified item from your inventory at current coordinates.
-            If first item is missing in your inventory, it will try to use second, and so on.
-            """)
-    @ApiVisibility(ApiType.BLOCK_AUTOMATION)
-    public void useItem(String[] itemIds) {
-        BlockAutomation.instance.useItem(itemIds, BlockPlacingMethod.ANY);
+        Item item = Registries.ITEMS.safeParse(itemId);
+        if (item != null) {
+            BlockAutomation.instance.useItem(stack -> stack.is(item), BlockPlacingMethod.ANY);
+        }
     }
 
     @MethodDescription(value = """
@@ -55,7 +54,32 @@ public class BlockAutomationApi extends ModuleApi<BlockAutomationConfig> {
             """)
     @ApiVisibility(ApiType.BLOCK_AUTOMATION)
     public void useItem(String itemId, String method) {
-        BlockAutomation.instance.useItem(itemId, parseMethod(method));
+        Item item = Registries.ITEMS.safeParse(itemId);
+        if (item != null) {
+            BlockAutomation.instance.useItem(stack -> stack.is(item), parseMethod(method));
+        }
+    }
+
+    @MethodDescription(value = """
+            Uses first item from your inventory that matches predicate at current coordinates.
+            "method" parameter specifies custom way to use block. Allowed values:
+                - "bottom-slab"
+                - "top-slab"
+                - "facing-top"    // for blocks like piston
+                - "facing-bottom"
+                - "facing-north"
+                - "facing-south"
+                - "facing-east"
+                - "facing-west"
+                - "from-top"      // for items like seeds
+                - "from-bottom"
+                - "from-horizontal"
+                - "item-use"      // for items like bonemeal
+                - "air-place"
+            """)
+    @ApiVisibility(ApiType.BLOCK_AUTOMATION)
+    public void useItem(ItemStackPredicate predicate, String method) {
+        BlockAutomation.instance.useItem(stack -> predicate.test(new ItemStackWrapper(stack)), parseMethod(method));
     }
 
     @ApiVisibility(ApiType.BLOCK_AUTOMATION)
@@ -83,7 +107,7 @@ public class BlockAutomationApi extends ModuleApi<BlockAutomationConfig> {
             """)
     @ApiVisibility(ApiType.BLOCK_AUTOMATION)
     public void breakBlock() {
-        BlockAutomation.instance.breakBlock(null, null);
+        BlockAutomation.instance.breakBlock(stack -> true);
     }
 
     @MethodDescription("""
@@ -91,7 +115,10 @@ public class BlockAutomationApi extends ModuleApi<BlockAutomationConfig> {
             """)
     @ApiVisibility(ApiType.BLOCK_AUTOMATION)
     public void breakBlock(String itemId) {
-        BlockAutomation.instance.breakBlock(itemId, null);
+        Item item = Registries.ITEMS.safeParse(itemId);
+        if (item != null) {
+            BlockAutomation.instance.breakBlock(stack -> stack.is(item));
+        }
     }
 
     @MethodDescription("""
@@ -99,7 +126,26 @@ public class BlockAutomationApi extends ModuleApi<BlockAutomationConfig> {
             """)
     @ApiVisibility(ApiType.BLOCK_AUTOMATION)
     public void breakBlock(String itemId, String enchantmentId) {
-        BlockAutomation.instance.breakBlock(itemId, enchantmentId);
+        Item item = Registries.ITEMS.safeParse(itemId);
+        if (item != null) {
+            ResourceLocation enchantment = ResourceLocation.tryParse(enchantmentId);
+            if (enchantment != null) {
+                BlockAutomation.instance.breakBlock(stack -> {
+                    if (!stack.is(item)) {
+                        return false;
+                    }
+                    return stack.getEnchantments().entrySet().stream().anyMatch(holder -> holder.getKey().unwrapKey().get().location().equals(enchantment));
+                });
+            }
+        }
+    }
+
+    @MethodDescription("""
+            Breaks block with an item that matches custom condition
+            """)
+    @ApiVisibility(ApiType.BLOCK_AUTOMATION)
+    public void breakBlock(ItemStackPredicate predicate) {
+        BlockAutomation.instance.breakBlock(stack -> predicate.test(new ItemStackWrapper(stack)));
     }
 
     private BlockPlacingMethod parseMethod(String value) {
