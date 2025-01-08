@@ -14,6 +14,7 @@ public abstract class ModuleApi<T extends ModuleConfig> {
     public boolean isEnabled() {
         return getConfig().enabled;
     }
+
     @MethodDescription("""
             Enables module
             """)

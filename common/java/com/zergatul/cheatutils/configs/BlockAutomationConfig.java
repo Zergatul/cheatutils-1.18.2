@@ -1,6 +1,7 @@
 package com.zergatul.cheatutils.configs;
 
 public class BlockAutomationConfig extends BlockPlacerConfig implements ValidatableConfig {
+
     public String code;
     public boolean debugMode;
 

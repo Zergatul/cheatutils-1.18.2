@@ -77,10 +77,14 @@ public class BlockUtils {
     }
 
     public static void applyPlacingPlan(PlaceBlockPlan plan, boolean useShift) {
-        placeBlock(plan.destination, plan.direction, plan.neighbour, plan.target, plan.rotation, useShift);
+        applyPlacingPlan(InteractionHand.MAIN_HAND, plan, useShift);
     }
 
-    private static void placeBlock(BlockPos destination, Direction direction, BlockPos neighbour, Vec3 target, Rotation rotation, boolean useShift) {
+    public static void applyPlacingPlan(InteractionHand hand, PlaceBlockPlan plan, boolean useShift) {
+        placeBlock(hand, plan.destination, plan.direction, plan.neighbour, plan.target, plan.rotation, useShift);
+    }
+
+    private static void placeBlock(InteractionHand hand, BlockPos destination, Direction direction, BlockPos neighbour, Vec3 target, Rotation rotation, boolean useShift) {
         if (mc.player == null) {
             return;
         }
@@ -111,8 +115,7 @@ public class BlockUtils {
             }
         }
 
-        InteractionHand hand = InteractionHand.MAIN_HAND;
-        InteractionResult result = mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, hit);
+        InteractionResult result = mc.gameMode.useItemOn(mc.player, hand, hit);
         if (result.consumesAction()) {
             if (result instanceof InteractionResult.Success success && success.swingSource() == InteractionResult.SwingSource.CLIENT) {
                 mc.player.swing(hand);

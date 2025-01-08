@@ -1,13 +1,16 @@
 package com.zergatul.cheatutils.scripting.modules;
 
+import com.zergatul.cheatutils.configs.BlockAutomationConfig;
+import com.zergatul.cheatutils.configs.ConfigStore;
 import com.zergatul.cheatutils.modules.scripting.BlockAutomation;
 import com.zergatul.cheatutils.scripting.ApiType;
 import com.zergatul.cheatutils.scripting.ApiVisibility;
 import com.zergatul.cheatutils.utils.BlockPlacingMethod;
 import com.zergatul.scripting.MethodDescription;
+import net.minecraft.world.InteractionHand;
 
 @SuppressWarnings("unused")
-public class BlockAutomationApi {
+public class BlockAutomationApi extends ModuleApi<BlockAutomationConfig> {
 
     @MethodDescription("""
             For debugging
@@ -55,6 +58,26 @@ public class BlockAutomationApi {
         BlockAutomation.instance.useItem(itemId, parseMethod(method));
     }
 
+    @ApiVisibility(ApiType.BLOCK_AUTOMATION)
+    public void useWithMainHand() {
+        BlockAutomation.instance.useItem(InteractionHand.MAIN_HAND, BlockPlacingMethod.ANY);
+    }
+
+    @ApiVisibility(ApiType.BLOCK_AUTOMATION)
+    public void useWithMainHand(String method) {
+        BlockAutomation.instance.useItem(InteractionHand.MAIN_HAND, parseMethod(method));
+    }
+
+    @ApiVisibility(ApiType.BLOCK_AUTOMATION)
+    public void useWithOffHand() {
+        BlockAutomation.instance.useItem(InteractionHand.OFF_HAND, BlockPlacingMethod.ANY);
+    }
+
+    @ApiVisibility(ApiType.BLOCK_AUTOMATION)
+    public void useWithOffHand(String method) {
+        BlockAutomation.instance.useItem(InteractionHand.OFF_HAND, parseMethod(method));
+    }
+
     @MethodDescription("""
             Breaks block with currently equipped item
             """)
@@ -96,5 +119,10 @@ public class BlockAutomationApi {
             case "air-place" -> BlockPlacingMethod.AIR_PLACE;
             default -> BlockPlacingMethod.ANY;
         };
+    }
+
+    @Override
+    protected BlockAutomationConfig getConfig() {
+        return ConfigStore.instance.getConfig().blockAutomationConfig;
     }
 }
