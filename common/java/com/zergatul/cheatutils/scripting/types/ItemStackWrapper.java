@@ -7,6 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
@@ -76,14 +77,24 @@ public class ItemStackWrapper {
         return inner.save(mc.level.registryAccess()).getAsString();
     }
 
-    private EnchantmentWrapper[] getEnchantmentsInternal() {
-        ItemEnchantments enchantments;
-        if (inner.is(Items.ENCHANTED_BOOK)) {
-            enchantments = inner.getOrDefault(DataComponents.STORED_ENCHANTMENTS, ItemEnchantments.EMPTY);
-        } else {
-            enchantments = inner.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
+    public boolean hasEnchantment(String id) {
+        ResourceLocation location = ResourceLocation.tryParse(id);
+        if (location == null) {
+            return false;
         }
-        return EnchantmentWrapper.of(enchantments);
+        return getItemEnchantments().keySet().stream().anyMatch(holder -> holder.unwrapKey().get().location().equals(location));
+    }
+
+    private EnchantmentWrapper[] getEnchantmentsInternal() {
+        return EnchantmentWrapper.of(getItemEnchantments());
+    }
+
+    private ItemEnchantments getItemEnchantments() {
+        if (inner.is(Items.ENCHANTED_BOOK)) {
+            return inner.getOrDefault(DataComponents.STORED_ENCHANTMENTS, ItemEnchantments.EMPTY);
+        } else {
+            return inner.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
+        }
     }
 
     private String[] getTooltipInternal() {

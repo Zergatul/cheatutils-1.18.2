@@ -66,11 +66,7 @@ public class SlotSelector {
         return -1;
     }
 
-    public int selectItem(BlockPlacerConfig config, Item item) {
-        return selectItem(config, item, stack -> true);
-    }
-
-    public int selectItem(BlockPlacerConfig config, Item item, Predicate<ItemStack> predicate) {
+    public int selectItem(BlockPlacerConfig config, Predicate<ItemStack> predicate) {
         if (mc.player == null) {
             return -1;
         }
@@ -78,7 +74,7 @@ public class SlotSelector {
         Inventory inventory = mc.player.getInventory();
 
         // check if we are holding correct item
-        if (inventory.getSelected().is(item) && predicate.test(inventory.getSelected())) {
+        if (predicate.test(inventory.getSelected())) {
             lastSlotUsage[inventory.selected] = System.nanoTime();
             return inventory.selected;
         }
@@ -86,7 +82,7 @@ public class SlotSelector {
         // search on hotbar
         for (int i = 0; i < 9; i++) {
             ItemStack itemStack = inventory.getItem(i);
-            if (itemStack.is(item) && predicate.test(itemStack)) {
+            if (predicate.test(itemStack)) {
                 lastSlotUsage[i] = System.nanoTime();
                 return i;
             }
@@ -99,7 +95,7 @@ public class SlotSelector {
         // search in inventory
         for (int i = 9; i < 36; i++) {
             ItemStack itemStack = inventory.getItem(i);
-            if (itemStack.is(item) && predicate.test(itemStack)) {
+            if (predicate.test(itemStack)) {
                 long minTime = Long.MAX_VALUE;
                 int minSlot = config.autoSelectSlots[0];
                 for (int slot : config.autoSelectSlots) {
