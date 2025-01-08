@@ -69,6 +69,10 @@ public enum ScriptType {
                 .addCustomType(HttpRequestBuilderWrapper.class)
                 .addCustomType(HttpResponseWrapper.class)
                 .addCustomType(HttpHeader.class)
+                .addCustomType(Regex.class)
+                .addCustomType(Match.class)
+                .addCustomType(MatchGroup.class)
+                .addCustomType(MatchGroups.class)
                 .setInterface(funcInterface)
                 .setAsyncReturnType(asyncReturnType)
                 .setVisibilityChecker(new VisibilityChecker() {
