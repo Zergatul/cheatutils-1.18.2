@@ -34,6 +34,7 @@ public class BlockAutomation {
     private final SlotSelector slotSelector = new SlotSelector();
     private BlockPosConsumer script;
     private String[] itemIds;
+    private InteractionHand hand;
     private BlockPlacingMethod method;
     private boolean breakCurrentBlock;
     private String breakItemId;
@@ -57,7 +58,14 @@ public class BlockAutomation {
     }
 
     public void useItem(String[] itemIds, BlockPlacingMethod method) {
+        this.hand = null;
         this.itemIds = itemIds;
+        this.method = method;
+    }
+
+    public void useItem(InteractionHand hand, BlockPlacingMethod method) {
+        this.hand = hand;
+        this.itemIds = null;
         this.method = method;
     }
 
@@ -136,6 +144,7 @@ public class BlockAutomation {
 
             for (BlockPos pos : NearbyBlockEnumerator.getPositions(eyePos, config.maxRange)) {
                 itemIds = null;
+                hand = null;
                 breakCurrentBlock = false;
                 script.accept(pos.getX(), pos.getY(), pos.getZ());
 
@@ -147,6 +156,21 @@ public class BlockAutomation {
                     }
                     actionPerformed = true;
                     continue actionLoop;
+                } else if (hand != null) {
+                    BlockUtils.PlaceBlockPlan plan = BlockUtils.getPlacingPlan(pos, config.attachToAir, method);
+                    if (plan != null) {
+                        if (config.debugMode && !debugStep) {
+                            debugPlan = plan;
+                            break actionLoop;
+                            // TODO: test after actions per tick change?
+                        } else {
+                            debugPlan = null;
+                            debugStep = false;
+                            BlockUtils.applyPlacingPlan(hand, plan, config.useShift);
+                            actionPerformed = true;
+                            continue actionLoop;
+                        }
+                    }
                 } else if (itemIds != null) {
                     for (String itemId : itemIds) {
                         Item item = Registries.ITEMS.safeParse(itemId);
