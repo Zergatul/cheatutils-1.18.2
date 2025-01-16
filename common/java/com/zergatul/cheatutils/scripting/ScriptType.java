@@ -73,6 +73,9 @@ public enum ScriptType {
                 .addCustomType(Match.class)
                 .addCustomType(MatchGroup.class)
                 .addCustomType(MatchGroups.class)
+                .addCustomType(ComponentWrapper.class)
+                .addCustomType(FormattedTextComponent.class)
+                .addCustomType(StyleWrapper.class)
                 .setInterface(funcInterface)
                 .setAsyncReturnType(asyncReturnType)
                 .setVisibilityChecker(new VisibilityChecker() {
