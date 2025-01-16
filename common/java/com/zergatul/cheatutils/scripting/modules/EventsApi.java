@@ -63,6 +63,20 @@ public class EventsApi {
     }
 
     @MethodDescription("""
+            Triggers when new message appears on chat.
+            Message may come from the server, from cheatutils, or from another mod.
+            This event provides low level access to internal message structure, like styles, links, hover messages.
+            Example:
+            events.onChatMessageRaw(message => {
+                // ...
+            });
+            """)
+    @ApiVisibility(ApiType.EVENTS)
+    public void onChatMessageRaw(ComponentWrapperConsumer consumer) {
+        EventsScripting.instance.addOnChatMessageRaw(consumer);
+    }
+
+    @MethodDescription("""
             Triggers when you join any server.
             Example:
             events.onJoinServer(address => {

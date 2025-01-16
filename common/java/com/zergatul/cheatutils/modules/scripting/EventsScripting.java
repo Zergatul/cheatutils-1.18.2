@@ -4,10 +4,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.zergatul.cheatutils.common.Events;
 import com.zergatul.cheatutils.configs.ConfigStore;
 import com.zergatul.cheatutils.modules.Module;
-import com.zergatul.cheatutils.scripting.ChatMessageConsumer;
-import com.zergatul.cheatutils.scripting.ContainerClickConsumer;
-import com.zergatul.cheatutils.scripting.EntityIdConsumer;
-import com.zergatul.cheatutils.scripting.ServerAddressConsumer;
+import com.zergatul.cheatutils.scripting.*;
+import com.zergatul.cheatutils.scripting.types.ComponentWrapper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.RemotePlayer;
 
@@ -23,6 +21,7 @@ public class EventsScripting implements Module {
     private final List<Runnable> onTickEnd = new ArrayList<>();
     private final List<EntityIdConsumer> onPlayerAdded = new ArrayList<>();
     private final List<EntityIdConsumer> onPlayerRemoved = new ArrayList<>();
+    private final List<ComponentWrapperConsumer> onChatMessageRaw = new ArrayList<>();
     private final List<ChatMessageConsumer> onChatMessage = new ArrayList<>();
     private final List<ServerAddressConsumer> onJoinServer = new ArrayList<>();
     private final List<ContainerClickConsumer> onContainerMenuClick = new ArrayList<>();
@@ -62,9 +61,13 @@ public class EventsScripting implements Module {
 
         Events.ChatMessageAdded.add(component -> {
             if (canTrigger()) {
+                ComponentWrapper wrapper = new ComponentWrapper(component);
+                for (ComponentWrapperConsumer consumer : onChatMessageRaw) {
+                    consumer.accept(wrapper);
+                }
                 String text = component.getString();
                 for (ChatMessageConsumer consumer : onChatMessage) {
-                    consumer.accept( text);
+                    consumer.accept(text);
                 }
             }
         });
@@ -100,6 +103,7 @@ public class EventsScripting implements Module {
             onTickEnd.clear();
             onPlayerAdded.clear();
             onPlayerRemoved.clear();
+            onChatMessageRaw.clear();
             onChatMessage.clear();
             onJoinServer.clear();
             onContainerMenuClick.clear();
@@ -120,6 +124,10 @@ public class EventsScripting implements Module {
 
     public void addOnPlayerRemoved(EntityIdConsumer consumer) {
         onPlayerRemoved.add(consumer);
+    }
+
+    public void addOnChatMessageRaw(ComponentWrapperConsumer consumer) {
+        onChatMessageRaw.add(consumer);
     }
 
     public void addOnChatMessage(ChatMessageConsumer consumer) {
