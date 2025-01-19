@@ -117,7 +117,7 @@ public class BlockEsp {
                     renderer = thickLineRenderer;
                 }
 
-                for (BlockPos pos : bbList) {
+                for (BlockPos pos : tracerList) {
                     renderer.line(
                             tracerX, tracerY, tracerZ,
                             pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
