@@ -477,10 +477,12 @@ public class CompletionProvider {
     private void addLocalVariables(List<Suggestion> suggestions, List<BoundStatementNode> statements) {
         for (BoundStatementNode statement : statements) {
             if (statement instanceof BoundVariableDeclarationNode declaration) {
-                LocalVariable local = (LocalVariable) declaration.name.symbol;
-                if (local.getName() != null) {
-                    suggestions.add(documentationProvider.getLocalVariableSuggestion((LocalVariable) declaration.name.symbol));
+                if (declaration.name.symbol instanceof LocalVariable local) {
+                    if (local.getName() != null) {
+                        suggestions.add(documentationProvider.getLocalVariableSuggestion((LocalVariable) declaration.name.symbol));
+                    }
                 }
+                // can be lifted variable?
             }
         }
     }

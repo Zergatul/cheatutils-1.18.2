@@ -18,8 +18,8 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'adopt'
-          java-version: '21'
+          distribution: temurin
+          java-version: 21
 
       - name: Change permissions for gradlew
         run: |
