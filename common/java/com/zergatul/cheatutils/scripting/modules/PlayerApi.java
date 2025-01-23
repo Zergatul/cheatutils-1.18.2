@@ -454,6 +454,19 @@ public class PlayerApi {
                 return "";
             }
         }
+
+        public BlockPosWrapper getBlockPosInRange(double maxRange, boolean captureFluids) {
+            if (mc.level == null || mc.player == null) {
+                return new BlockPosWrapper(Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE);
+            }
+
+            HitResult result = mc.player.pick(maxRange, 0, captureFluids);
+            if (result instanceof BlockHitResult hitResult && hitResult.getType() == HitResult.Type.BLOCK) {
+                return new BlockPosWrapper(hitResult.getBlockPos());
+            } else {
+                return new BlockPosWrapper(Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE);
+            }
+        }
     }
 
     public static class EffectsApi {
