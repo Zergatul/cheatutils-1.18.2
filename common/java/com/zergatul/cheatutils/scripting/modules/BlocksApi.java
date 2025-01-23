@@ -6,6 +6,7 @@ import com.zergatul.cheatutils.configs.ConfigStore;
 import com.zergatul.cheatutils.modules.esp.BlockFinder;
 import com.zergatul.cheatutils.scripting.ApiType;
 import com.zergatul.cheatutils.scripting.ApiVisibility;
+import com.zergatul.cheatutils.scripting.types.BlockPosWrapper;
 import com.zergatul.scripting.MethodDescription;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
@@ -20,7 +21,7 @@ public class BlocksApi {
             Checks if block is enabled. If block is part of a group, returns status of this group
             """)
     public boolean isEnabled(String blockId) {
-        var config = getConfig(blockId);
+        BlockEspConfig config = getConfig(blockId);
         if (config == null) {
             return false;
         }
@@ -32,7 +33,7 @@ public class BlocksApi {
             """)
     @ApiVisibility(ApiType.UPDATE)
     public void toggle(String blockId) {
-        var config = getConfig(blockId);
+        BlockEspConfig config = getConfig(blockId);
         if (config == null) {
             return;
         }
@@ -70,6 +71,29 @@ public class BlocksApi {
         } else {
             return set.size();
         }
+    }
+
+    @MethodDescription("""
+            Removes block from Block ESP and prevents future Block ESP at this coordinates.
+            Black list is not persistent and it is cleared when you restart Minecraft.
+            """)
+    public void addBlackList(BlockPosWrapper pos) {
+        addBlackList(pos.getX(), pos.getY(), pos.getZ());
+    }
+
+    @MethodDescription("""
+            Removes block from Block ESP and prevents future Block ESP at this coordinates.
+            Black list is not persistent and it is cleared when you restart Minecraft.
+            """)
+    public void addBlackList(int x, int y, int z) {
+        BlockFinder.instance.addBlackList(new BlockPos(x, y, z));
+    }
+
+    @MethodDescription("""
+            Clears black list with block coordinates. This action does not re-add blocks that match Block ESP conditions at these coordinates.
+            """)
+    public void clearBlackList() {
+        BlockFinder.instance.blackList.clear();
     }
 
     private BlockEspConfig getConfig(String blockId) {
