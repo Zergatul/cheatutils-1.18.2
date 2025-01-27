@@ -44,5 +44,26 @@
                 </div>
             </div>
         </fieldset>
+
+        <fieldset class="flex-column">
+            <legend>
+                <switch-checkbox v-model="config.scriptEnabled" @change="update()">Custom Script</switch-checkbox>
+            </legend>
+            <template v-if="config.scriptEnabled">
+                <div class="section-description">
+                    Write script to decide if module should apply hitbox change to specific entity.<br>
+                    Use <b>id</b> variable to see id of the current entity.<br>
+                    Return <b>true</b> if module should alter entity hitbox, return <b>false</b> if it is not.<br>
+                </div>
+                <div class="actions">
+                    <button class="w8" @click="saveCode()">Save</button>
+                    <button class="w12" @click="showApiRef()">Show/Hide API Reference</button>
+                </div>
+                <script-editor v-model="code" :type="'HITBOX_SIZE'" v-show="!showRefs"></script-editor>
+                <ul class="refs" v-show="showRefs">
+                    <li v-for="item in refs" v-html="item"></li>
+                </ul>
+            </template>
+        </fieldset>
     </div>
 </div>

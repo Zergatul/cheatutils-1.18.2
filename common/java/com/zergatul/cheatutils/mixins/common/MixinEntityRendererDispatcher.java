@@ -20,11 +20,7 @@ public abstract class MixinEntityRendererDispatcher {
             method = "renderHitbox",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getBoundingBox()Lnet/minecraft/world/phys/AABB;", ordinal = 0))
     private static AABB onGetTargetEntityBoundingBox(Entity target) {
-        if (ConfigStore.instance.getConfig().hitboxSizeConfig.enabled) {
-            return HitboxSize.instance.get(target);
-        } else {
-            return target.getBoundingBox();
-        }
+        return HitboxSize.instance.get(target);
     }
 
     @ModifyVariable(

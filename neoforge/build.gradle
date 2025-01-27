@@ -8,6 +8,10 @@ plugins {
     id 'net.neoforged.moddev' version '1.0.21'
 }
 
+def commonProperties = new Properties()
+file('../common/gradle.properties').withInputStream { commonProperties.load(it) }
+def mod_version = commonProperties['mod_version']
+
 tasks.named('wrapper', Wrapper).configure {
     // Define wrapper values here so as to not have to always do so when updating gradlew.properties.
     // Switching this to Wrapper.DistributionType.ALL will download the full gradle sources that comes with

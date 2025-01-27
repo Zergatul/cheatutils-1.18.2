@@ -7,6 +7,7 @@ import com.zergatul.cheatutils.configs.adapters.*;
 import com.zergatul.cheatutils.controllers.*;
 import com.zergatul.cheatutils.modules.automation.VillagerRoller;
 import com.zergatul.cheatutils.modules.esp.LightLevel;
+import com.zergatul.cheatutils.modules.hacks.HitboxSize;
 import com.zergatul.cheatutils.modules.hacks.KillAura;
 import com.zergatul.cheatutils.modules.scripting.EventsScripting;
 import com.zergatul.cheatutils.modules.scripting.BlockAutomation;
@@ -264,6 +265,19 @@ public class ConfigStore {
                     KillAura.instance.setScript(result.getProgram());
                 } else {
                     result.getDiagnostics().forEach(m -> logger.error("Kill Aura: {}", m.message));
+                }
+            } catch (Throwable e) {
+                logger.error(e);
+            }
+        }
+
+        if (config.hitboxSizeConfig.code != null) {
+            try {
+                CompilationResult result = ScriptsController.instance.compileHitboxSize(config.hitboxSizeConfig.code);
+                if (result.getProgram() != null) {
+                    HitboxSize.instance.setScript(result.getProgram());
+                } else {
+                    result.getDiagnostics().forEach(m -> logger.error("Hitbox Size: {}", m.message));
                 }
             } catch (Throwable e) {
                 logger.error(e);

@@ -6,6 +6,10 @@ plugins {
     id 'maven-publish'
 }
 
+def commonProperties = new Properties()
+file('../common/gradle.properties').withInputStream { commonProperties.load(it) }
+ext.mod_version = commonProperties['mod_version']
+
 version = project.mod_version
 group = project.maven_group
 

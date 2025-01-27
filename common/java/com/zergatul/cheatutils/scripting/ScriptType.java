@@ -37,7 +37,11 @@ public enum ScriptType {
 
     KILL_AURA(
             new ApiType[0],
-            KillAuraFunction.class);
+            KillAuraFunction.class),
+
+    HITBOX_SIZE(
+            new ApiType[0],
+            HitboxSizeFunction.class);
 
     private final ApiType[] apis;
     private final Class<?> funcInterface;

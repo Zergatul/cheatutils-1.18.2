@@ -3,6 +3,7 @@ package com.zergatul.cheatutils.scripting.modules;
 import com.zergatul.cheatutils.common.Registries;
 import com.zergatul.cheatutils.extensions.LivingEntityExtension;
 import com.zergatul.cheatutils.mixins.common.accessors.ColorParticleOptionAccessor;
+import com.zergatul.cheatutils.scripting.types.BoundingBox;
 import com.zergatul.cheatutils.scripting.types.ItemStackWrapper;
 import com.zergatul.cheatutils.scripting.types.Position3d;
 import com.zergatul.cheatutils.utils.ColorUtils;
@@ -44,6 +45,7 @@ import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.level.storage.ServerLevelData;
+import net.minecraft.world.phys.AABB;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -549,6 +551,16 @@ public class GameApi {
                 return false;
             }
             return mc.level.noBlockCollision(null, type.getSpawnAABB(x + 0.5, y, z + 0.5));
+        }
+
+        @MethodDescription("""
+                Returns bounding box (or hitbox in other words) for specified entity
+                """)
+        public BoundingBox getBoundingBox(int entityId) {
+            return getValue(
+                    entityId,
+                    entity -> new BoundingBox(entity.getBoundingBox()),
+                    () -> new BoundingBox(new AABB(0, 0, 0, 0, 0, 0)));
         }
 
         private Function<Entity, ItemStackWrapper> getEquippedItem(EquipmentSlot slot) {

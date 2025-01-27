@@ -22,6 +22,10 @@ plugins {
 apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'org.spongepowered.mixin'
 
+def commonProperties = new Properties()
+file('../common/gradle.properties').withInputStream { commonProperties.load(it) }
+def mod_version = commonProperties['mod_version']
+
 version = mod_version
 group = mod_group_id
 

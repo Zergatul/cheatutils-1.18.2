@@ -17,6 +17,9 @@ public class HitboxSizeConfig extends ModuleConfig implements ValidatableConfig 
     public double heightPercent;
     public double heightAbsolute;
 
+    public boolean scriptEnabled;
+    public String code;
+
     public HitboxSizeConfig() {
         widthMode = MODE_PERCENT;
         widthPercent = 25;
