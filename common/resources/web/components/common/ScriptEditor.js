@@ -1,6 +1,8 @@
-import * as monaco from 'https://cdn.jsdelivr.net/npm/monaco-editor@0.48.0/+esm'
+import * as FallbackLoader from '/fallback-loader.js'
 import * as http from '/http.js'
 import { withCss } from '/components/Loader.js'
+
+const monaco = await FallbackLoader.monaco();
 
 const languageId = 'cheatutils-scripting-language';
 const map = [];
@@ -9,10 +11,28 @@ function getSettingsByModel(model) {
     return map.find(o => o.model == model);
 }
 
-let link = document.createElement('link');
-link.href = 'https://cdn.jsdelivr.net/npm/vscode-codicons@0.0.17/dist/codicon.min.css';
-link.rel = 'stylesheet';
-document.head.appendChild(link);
+function addStyleSheet(url, onSuccess, onError) {
+    let link = document.createElement('link');
+    link.href = url;
+    link.rel = 'stylesheet';
+    if (onSuccess) {
+        link.addEventListener('load', onSuccess);
+    }
+    if (onError) {
+        link.addEventListener('error', onError);
+    }
+    document.head.appendChild(link);
+}
+
+addStyleSheet('https://cdn.jsdelivr.net/npm/vscode-codicons@0.0.17/dist/codicon.min.css', () => {
+    console.debug('Codicon has been loaded from CDN.');
+}, () => {
+    addStyleSheet('/local/codicon.min.css', () => {
+        console.debug('Codicon has been loaded from local server.');
+    }, () => {
+        console.error('Failed to load Codicon from local server.', error);
+    });
+});
 
 let dark = null;
 

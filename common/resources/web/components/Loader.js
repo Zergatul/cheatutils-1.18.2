@@ -1,11 +1,13 @@
-import * as Vue from '/vue.esm-browser.js';
-import * as http from '/http.js';
+import * as FallbackLoader from '/fallback-loader.js'
+import * as http from '/http.js'
+
+const { defineAsyncComponent } = await FallbackLoader.vue();
 
 export function addComponent(args, name) {
     if (!args.components) {
         args.components = {};
     }
-    args.components[name] = Vue.defineAsyncComponent(function () {
+    args.components[name] = defineAsyncComponent(function () {
         return new Promise(function (resolve, reject) {
             http.getText(`/components/${name}.html`).then(response => {
                 import(`/components/${name}.js`).then(function (module) {
@@ -17,7 +19,7 @@ export function addComponent(args, name) {
 };
 
 export function getComponent(path) {
-    return Vue.defineAsyncComponent(async () => {
+    return defineAsyncComponent(async () => {
         const html = await http.getText(`/components/${path}.html`);
         const module = await import(`/components/${path}.js`);
         const component = module.createComponent(html);

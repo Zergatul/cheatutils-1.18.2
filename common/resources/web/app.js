@@ -1,8 +1,10 @@
-import { createApp, defineComponent, ref, computed, onMounted, onUnmounted, watch, nextTick } from '/vue.esm-browser.js'
+import * as FallbackLoader from '/fallback-loader.js'
 import * as http from '/http.js'
 import { getComponent } from '/components/Loader.js'
 import * as events from '/events-service.js'
 import { modules } from '/modules.js'
+
+const { createApp, defineComponent, ref, computed, onMounted, onUnmounted, watch, nextTick } = await FallbackLoader.vue();
 
 const main = getComponent('Main');
 

@@ -1,8 +1,10 @@
-import { ref, onMounted, onUnmounted } from '/vue.esm-browser.js';
+import * as FallbackLoader from '/fallback-loader.js'
 import { modules } from '/modules.js'
 import * as http from '/http.js'
 import * as events from '/events-service.js'
 import { getComponent } from '/components/Loader.js'
+
+const { ref, onMounted, onUnmounted } = await FallbackLoader.vue();
 
 const button = getComponent('ModuleButton');
 

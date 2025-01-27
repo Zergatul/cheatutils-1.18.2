@@ -1,8 +1,10 @@
-import { ref, nextTick, onUnmounted } from '/vue.esm-browser.js'
+import * as FallbackLoader from '/fallback-loader.js'
 import { withCss } from '/components/Loader.js'
 import { createBlockRenderer, removeBlockRenderer } from './BlockRenderer.js'
-import * as http from '/http.js';
-import { components } from '../../components.js';
+import * as http from '/http.js'
+import { components } from '../../components.js'
+
+const { ref, nextTick, onUnmounted } = await FallbackLoader.vue();
 
 const blockInfoPromise = http.get('/api/block-info').then(blocksList => {
     const blocksMap = {};

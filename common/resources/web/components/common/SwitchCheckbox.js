@@ -1,5 +1,7 @@
-import { withCss } from '/components/Loader.js';
-import { ref, computed, toRefs } from '/vue.esm-browser.js';
+import * as FallbackLoader from '/fallback-loader.js'
+import { withCss } from '/components/Loader.js'
+
+const { ref, computed, toRefs } = await FallbackLoader.vue();
 
 let index = 1;
 

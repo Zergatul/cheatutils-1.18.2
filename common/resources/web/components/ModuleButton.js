@@ -1,4 +1,6 @@
-import { toRefs } from '/vue.esm-browser.js';
+import * as FallbackLoader from '/fallback-loader.js'
+
+const { toRefs } = await FallbackLoader.vue();
 
 export function createComponent(template) {
     return {

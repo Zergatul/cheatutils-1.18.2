@@ -61,6 +61,7 @@ public class ConfigHttpServer {
         server.createContext("/api/", new ApiHandler());
         server.createContext("/assets/", new AssetsHandler());
         server.createContext("/textures/", new TexturesHandler());
+        server.createContext("/local/", new LocalFilesHandler());
         server.createContext("/", new StaticFilesHandler());
 
         server.setExecutor(null);
