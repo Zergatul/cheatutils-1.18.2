@@ -4,17 +4,17 @@
         <div>
             Conditions:
             <ul>
-                <li>Netherite Pickaxe Efficiency 5 on hotbar</li>
+                <li>Any Pickaxe on hotbar (not required, will be used to break pistons)</li>
                 <li>Some amount of pistons on hotbar</li>
-                <li>Some amount of redstone torches on hotbar</li>
-                <li>Haste 2 effect from beacon (you should be able to instamine pistons)</li>
+                <li>Some amount of levers on hotbar</li>
+                <li>Some amount of replace blocks (if enabled)</li>
             </ul>
             How to use:
             <ul>
                 <li>Add <b>bedrockBreaker.process();</b> to keybinding</li>
                 <li>Target bedrock block</li>
-                <li>Ensure there are 2 empty blocks above bedrock</li>
-                <li>Ensure there is 1 block on the side of bedrock. Redstone torch will be placed on top of this block.</li>
+                <li>Ensure there are 2 empty blocks above or below bedrock</li>
+                <li>Ensure there is 1 free block nearby to place lever and power the piston</li>
                 <li>Press hotkey</li>
                 <li>If something goes wrong you should see system message</li>
             </ul>
@@ -24,19 +24,6 @@
     </div>
 
     <div class="module-sections">
-        <fieldset>
-            <legend>
-                <switch-checkbox v-model="config.placeSupportBlock" @change="update()">Place support block</switch-checkbox>
-            </legend>
-            <div class="flex-row">
-                <span class="field-description">Support block ID:</span>
-                <input type="text" class="w20" v-model="config.supportBlockId" @change="update()">
-            </div>
-            <div class="section-description">
-                If there is no horizontally adjacent blocks to current bedrock, module can place support block automatically.
-            </div>
-        </fieldset>
-
         <fieldset>
             <legend>
                 <switch-checkbox v-model="config.replace" @change="update()">Replace bedrock</switch-checkbox>

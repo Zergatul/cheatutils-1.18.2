@@ -299,13 +299,13 @@ module({
     path: 'hitbox-size',
     tags: ['hitbox', 'size']
 });
-/*module({
+module({
     group: 'hacks',
     name: 'Bedrock Breaker',
     component: 'BedrockBreaker',
     path: 'bedrock-breaker',
     tags: ['bedrock', 'breaker']
-});*/
+});
 module({
     group: 'hacks',
     name: 'Anti Hunger',

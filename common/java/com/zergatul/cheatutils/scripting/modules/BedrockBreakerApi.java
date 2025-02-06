@@ -19,4 +19,11 @@ public class BedrockBreakerApi {
     public void processNearby() {
         BedrockBreaker.instance.processNearby();
     }
+
+    @MethodDescription("""
+            Returns current status of the module. For debugging purposes
+            """)
+    public String getStatus() {
+        return BedrockBreaker.instance.getStatus();
+    }
 }

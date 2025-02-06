@@ -17,6 +17,10 @@ public enum BlockPlacingMethod {
     FROM_TOP,
     FROM_BOTTOM,
     FROM_HORIZONTAL,
+    FROM_EAST,
+    FROM_WEST,
+    FROM_SOUTH,
+    FROM_NORTH,
     ITEM_USE,
     AIR_PLACE;
 
@@ -45,7 +49,22 @@ public enum BlockPlacingMethod {
             case FROM_TOP -> new Direction[] { Direction.DOWN };
             case FROM_HORIZONTAL -> new Direction[] { Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST };
             case FROM_BOTTOM -> new Direction[] { Direction.UP };
+            case FROM_EAST -> new Direction[] { Direction.WEST };
+            case FROM_WEST -> new Direction[] { Direction.EAST };
+            case FROM_SOUTH -> new Direction[] { Direction.NORTH };
+            case FROM_NORTH -> new Direction[] { Direction.SOUTH };
             default -> Direction.values();
+        };
+    }
+
+    public static BlockPlacingMethod facing(Direction direction) {
+        return switch (direction) {
+            case UP -> FACING_TOP;
+            case DOWN -> FACING_BOTTOM;
+            case EAST -> FACING_EAST;
+            case WEST -> FACING_WEST;
+            case NORTH -> FACING_NORTH;
+            case SOUTH -> FACING_SOUTH;
         };
     }
 

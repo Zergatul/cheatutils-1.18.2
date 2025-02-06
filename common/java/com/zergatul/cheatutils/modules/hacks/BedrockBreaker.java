@@ -22,18 +22,22 @@ import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.level.block.Block;
+import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -45,8 +49,12 @@ public class BedrockBreaker implements Module {
     private final Direction[] horizontal = new Direction[] { Direction.EAST, Direction.WEST, Direction.NORTH, Direction.SOUTH };
     private final Queue<BlockPos> queue = new ArrayDeque<>();
     private BlockPos bedrockPos;
-    private BlockPos torchPos;
-    private BlockPos supportBlockPos;
+    private Direction pistonDirection;
+    private BlockPos pistonPos;
+    private float blockDestroyProgress;
+    private int blockDestroySeqNumber;
+    private Direction leverDirection;
+    private BlockPos leverPos;
     private State state = State.INIT;
     private int tickCount;
 
@@ -112,6 +120,13 @@ public class BedrockBreaker implements Module {
         }
     }
 
+    public String getStatus() {
+        return switch (state) {
+            case BREAK_PISTON_PROGRESS, BREAK_REMAINING_PISTON_PROGRESS -> state + " " + Math.round(blockDestroyProgress * 100) + "%";
+            default -> state.toString();
+        };
+    }
+
     private void onClientTickEnd() {
         if (mc.player == null) {
             return;
@@ -131,17 +146,10 @@ public class BedrockBreaker implements Module {
         }
 
         tickCount++;
-
-        switch (state) {
-            case START -> handleStartState();
-            case PLACE_TORCH -> handlePlaceTorch();
-            case WAIT_SUPPORT_BLOCK -> handleWaitSupportBlock();
-            case WAIT_PISTON_EXTEND -> handleWaitPistonExtendState();
-            case WAIT_BEDROCK_BREAK -> handleWaitBedrockBreakState();
-        }
+        state.handle(this);
     }
 
-    private void handleStartState() {
+    private void handleStart() {
         assert mc.player != null;
         assert mc.level != null;
 
@@ -151,7 +159,93 @@ public class BedrockBreaker implements Module {
             return;
         }
 
-        BlockUtils.PlaceBlockPlan plan = BlockUtils.getPlacingPlan(bedrockPos.above(), false, BlockPlacingMethod.FACING_TOP);
+        // check if we have 2 free blocks in some direction: one block for piston and second block for extended piston
+        pistonDirection = null;
+        for (Direction direction : sortByDistance(bedrockPos, new Direction[] { Direction.UP, Direction.DOWN })) {
+            BlockPos piston1 = bedrockPos.relative(direction);
+            if (!mc.level.getBlockState(piston1).canBeReplaced()) {
+                continue;
+            }
+            BlockPos piston2 = piston1.relative(direction);
+            if (!mc.level.getBlockState(piston2).canBeReplaced()) {
+                continue;
+            }
+            if (!isValidY(piston2.getY())) {
+                continue;
+            }
+            pistonDirection = direction;
+            break;
+        }
+
+        if (pistonDirection == null) {
+            reset("Cannot find location to place piston");
+            return;
+        }
+
+        pistonPos = bedrockPos.relative(pistonDirection);
+
+        leverDirection = null;
+        leverPos = null;
+        // find location for lever around bedrock
+        for (Direction direction : sortByDistance(bedrockPos, Direction.values())) {
+            if (direction == pistonDirection) {
+                continue;
+            }
+            if (!mc.level.getBlockState(bedrockPos.relative(direction)).canBeReplaced()) {
+                continue;
+            }
+            if (!isValidY(bedrockPos.relative(direction).getY())) {
+                continue;
+            }
+            leverDirection = direction;
+            leverPos = bedrockPos.relative(direction);
+            break;
+        }
+        if (leverPos == null) {
+            // find location for lever around piston
+            leverLocSearch:
+            for (Direction direction : sortByDistance(pistonPos, Direction.values())) {
+                if (direction == pistonDirection) {
+                    continue;
+                }
+                if (direction == pistonDirection.getOpposite()) {
+                    continue;
+                }
+                BlockPos possibleLeverPos = pistonPos.relative(direction);
+                if (!isValidY(possibleLeverPos.getY())) {
+                    continue;
+                }
+                for (Direction dir : sortByDistance(possibleLeverPos, Direction.values())) {
+                    BlockPos possibleSupportBlockPos = possibleLeverPos.relative(dir);
+                    if (possibleSupportBlockPos.equals(pistonPos)) {
+                        continue; // do not attach lever to piston
+                    }
+                    if (mc.level.getBlockState(possibleSupportBlockPos).canBeReplaced()) {
+                        continue;
+                    }
+                    BlockState leverBlockState = Blocks.LEVER.getStateForPlacement(new BlockPlaceContext(
+                            mc.player,
+                            InteractionHand.MAIN_HAND,
+                            new ItemStack(Items.LEVER, 1),
+                            new BlockHitResult(possibleLeverPos.getCenter(), dir.getOpposite(), possibleSupportBlockPos, false)));
+                    if (leverBlockState == null) {
+                        continue;
+                    }
+                    if (((BlockBehaviourAccessor) Blocks.LEVER).canSurvive_CU(leverBlockState, mc.level, possibleLeverPos)) {
+                        leverDirection = dir;
+                        leverPos = possibleLeverPos;
+                        break leverLocSearch;
+                    }
+                }
+            }
+        }
+
+        if (leverPos == null) {
+            reset("Cannot find location to place lever");
+            return;
+        }
+
+        BlockUtils.PlaceBlockPlan plan = BlockUtils.getPlacingPlan(pistonPos, false, BlockPlacingMethod.facing(pistonDirection));
         if (plan == null) {
             reset("Cannot place initial piston");
             return;
@@ -159,8 +253,8 @@ public class BedrockBreaker implements Module {
 
         mc.player.connection.send(new ServerboundSetCarriedItemPacket(pistonSlot));
         mc.player.connection.send(new ServerboundMovePlayerPacket.Rot(
-                mc.player.getYRot(),
-                90, // look down
+                Float.isNaN(plan.rotation().yRot()) ? mc.player.getYRot() : plan.rotation().yRot(),
+                Float.isNaN(plan.rotation().xRot()) ? mc.player.getXRot() : plan.rotation().xRot(),
                 mc.player.onGround(),
                 false));
         mc.player.connection.send(new ServerboundUseItemOnPacket(
@@ -168,171 +262,113 @@ public class BedrockBreaker implements Module {
                 new BlockHitResult(plan.target(), plan.direction(), plan.neighbour(), false),
                 getSequenceNumber()));
 
-        state = State.PLACE_TORCH;
-        handlePlaceTorch();
+        state = State.PLACE_LEVER;
+        state.handle(this);
     }
 
-    private void handlePlaceTorch() {
+    private void handlePlaceLever() {
         assert mc.player != null;
         assert mc.level != null;
 
-        int torchSlot = findItem(Items.REDSTONE_TORCH);
-        if (torchSlot < 0) {
-            reset("Cannot find redstone torch on hotbar");
+        int leverSlot = findItem(Items.LEVER);
+        if (leverSlot < 0) {
+            reset("Cannot find lever on hotbar");
             return;
         }
 
-        torchPos = null;
-        for (Direction direction : sortByDistance(bedrockPos.above(), horizontal)) {
-            BlockPos pos = bedrockPos.above().relative(direction);
-            BlockState state = mc.level.getBlockState(pos);
-            if (((BlockBehaviourAccessor) Blocks.REDSTONE_TORCH).canSurvive_CU(Blocks.REDSTONE_TORCH.defaultBlockState(), mc.level, pos) && state.canBeReplaced()) {
-                torchPos = pos;
-                break;
-            }
-        }
-
-        BedrockBreakerConfig config = ConfigStore.instance.getConfig().bedrockBreakerConfig;
-        if (torchPos == null) {
-            if (!config.placeSupportBlock) {
-                reset("Cannot find location to place torch");
-            } else {
-                state = State.PLACE_SUPPORT_BLOCK;
-                handlePlaceSupportBlock();
-            }
-            return;
-        }
-
-        BlockUtils.PlaceBlockPlan plan = BlockUtils.getPlacingPlan(torchPos, false, BlockPlacingMethod.FROM_TOP, Blocks.REDSTONE_TORCH.defaultBlockState());
+        BlockUtils.PlaceBlockPlan plan = BlockUtils.getPlacingPlan(leverPos, false, switch (leverDirection) {
+            case NORTH -> BlockPlacingMethod.FROM_NORTH;
+            case SOUTH -> BlockPlacingMethod.FROM_SOUTH;
+            case EAST -> BlockPlacingMethod.FROM_EAST;
+            case WEST -> BlockPlacingMethod.FROM_WEST;
+            default -> BlockPlacingMethod.ANY;
+        }, Blocks.LEVER.defaultBlockState());
         if (plan == null) {
-            reset("Cannot place redstone torch");
+            reset("Cannot place lever");
             return;
         }
 
-        mc.player.connection.send(new ServerboundSetCarriedItemPacket(torchSlot));
+        mc.player.connection.send(new ServerboundSetCarriedItemPacket(leverSlot));
         mc.player.connection.send(new ServerboundUseItemOnPacket(
                 InteractionHand.MAIN_HAND,
                 new BlockHitResult(plan.target(), plan.direction(), plan.neighbour(), false),
                 getSequenceNumber()));
 
-        tickCount = 0;
-        state = State.WAIT_PISTON_EXTEND;
+        state = State.BREAK_PISTON_START;
+        state.handle(this);
     }
 
-    private void handlePlaceSupportBlock() {
-        assert mc.player != null;
+    private void handleBreakPistonStart() {
         assert mc.level != null;
-
-        BedrockBreakerConfig config = ConfigStore.instance.getConfig().bedrockBreakerConfig;
-        ResourceLocation supportBlockId = ResourceLocation.parse(config.supportBlockId);
-        int supportBlockSlot = findItem(Registries.ITEMS.getValue(supportBlockId));
-        if (supportBlockSlot < 0) {
-            reset("Cannot find support block (" + config.supportBlockId + ") on hotbar");
-            return;
-        }
-
-        supportBlockPos = null;
-        BlockUtils.PlaceBlockPlan supportBlockPlan = null;
-        for (Direction direction : sortByDistance(bedrockPos, horizontal)) {
-            BlockPos pos = bedrockPos.relative(direction);
-            supportBlockPlan = BlockUtils.getPlacingPlan(pos, false);
-            if (supportBlockPlan != null) {
-                supportBlockPos = pos;
-                break;
-            }
-        }
-
-        if (supportBlockPos == null) {
-            reset("Cannot find location for support block");
-            return;
-        }
-
-        mc.player.connection.send(new ServerboundSetCarriedItemPacket(supportBlockSlot));
-        mc.player.connection.send(new ServerboundUseItemOnPacket(
-                InteractionHand.MAIN_HAND,
-                new BlockHitResult(supportBlockPlan.target(), supportBlockPlan.direction(), supportBlockPlan.neighbour(), false),
-                getSequenceNumber()));
+        assert mc.player != null;
 
         tickCount = 0;
-        state = State.WAIT_SUPPORT_BLOCK;
+
+        // equip pickaxe if present
+        int pickaxeSlot = findPickaxe();
+        if (pickaxeSlot >= 0) {
+            mc.player.getInventory().selected = pickaxeSlot;
+        }
+        mc.player.connection.send(new ServerboundSetCarriedItemPacket(mc.player.getInventory().selected));
+
+        blockDestroyProgress = getPistonDestroyProgress();
+        blockDestroySeqNumber = getSequenceNumber();
+
+        mc.player.connection.send(new ServerboundPlayerActionPacket(
+                ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK,
+                pistonPos,
+                Direction.UP,
+                blockDestroySeqNumber));
+
+        state = State.BREAK_PISTON_PROGRESS;
+        tickCount = 0;
     }
 
-    private void handleWaitSupportBlock() {
-        assert mc.player != null;
+    private void handleBreakPistonProgress() {
         assert mc.level != null;
-
-        if (supportBlockPos == null) {
-            reset("Support block pos is null");
-            return;
-        }
-
-        BedrockBreakerConfig config = ConfigStore.instance.getConfig().bedrockBreakerConfig;
-        ResourceLocation supportBlockId = ResourceLocation.parse(config.supportBlockId);
-        Block supportBlock = Registries.BLOCKS.getValue(supportBlockId);
-        if (mc.level.getBlockState(supportBlockPos).getBlock() == supportBlock) {
-            state = State.PLACE_TORCH;
-            handlePlaceTorch();
-        } else {
-            if (tickCount > 10) {
-                reset("Wait for support block timeout");
-            }
-        }
-    }
-
-    private void handleWaitPistonExtendState() {
         assert mc.player != null;
-        assert mc.level != null;
 
-        if (mc.level.getBlockState(bedrockPos.above().above()).getBlock() == Blocks.PISTON_HEAD) {
-            // destroy torch
-            mc.player.connection.send(new ServerboundPlayerActionPacket(
-                    ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK,
-                    torchPos,
-                    Direction.UP,
-                    getSequenceNumber()));
-
-            mc.level.destroyBlock(torchPos, false);
-
-            int pickaxeSlot = findItem(Items.NETHERITE_PICKAXE);
-            if (pickaxeSlot < 0) {
-                reset("Cannot select pickaxe");
-                return;
-            }
-
-            // destroy piston
-            mc.player.connection.send(new ServerboundSetCarriedItemPacket(pickaxeSlot));
-            mc.player.connection.send(new ServerboundPlayerActionPacket(
-                    ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK,
-                    bedrockPos.above(),
-                    Direction.UP,
-                    getSequenceNumber()));
-
-            mc.level.destroyBlock(bedrockPos.above(), false);
-
-            int pistonSlot = findItem(Items.PISTON);
-            if (pistonSlot < 0) {
-                reset("Cannot select piston");
-                return;
-            }
-
-            BlockUtils.PlaceBlockPlan plan = BlockUtils.getPlacingPlan(bedrockPos.above(), false, BlockPlacingMethod.FACING_BOTTOM);
-            if (plan == null) {
-                reset("Cannot place reverse piston");
-                return;
-            }
-
-            mc.player.connection.send(new ServerboundSetCarriedItemPacket(pistonSlot));
-            mc.player.connection.send(new ServerboundMovePlayerPacket.Rot(
-                    mc.player.getYRot(),
-                    -90, // look up
-                    mc.player.onGround(),
-                    false));
+        blockDestroyProgress += getPistonDestroyProgress();
+        if (blockDestroyProgress >= 1) {
+            // activate lever
             mc.player.connection.send(new ServerboundUseItemOnPacket(
                     InteractionHand.MAIN_HAND,
-                    new BlockHitResult(plan.target(), plan.direction(), plan.neighbour(), false),
+                    new BlockHitResult(leverPos.getCenter(), Direction.UP, leverPos, false),
                     getSequenceNumber()));
 
-            state = State.WAIT_BEDROCK_BREAK;
+            state = State.WAIT_PISTON_EXTEND;
+            tickCount = 0;
+        } else {
+            if (tickCount > 50) {
+                reset("Wait piston break timeout");
+            }
+        }
+    }
+
+    private void handleWaitPistonExtend() {
+        assert mc.player != null;
+        assert mc.level != null;
+        assert mc.gameMode != null;
+
+        if (mc.level.getBlockState(pistonPos.relative(pistonDirection)).getBlock() == Blocks.PISTON_HEAD) {
+            // deactivate lever
+            mc.player.connection.send(new ServerboundUseItemOnPacket(
+                    InteractionHand.MAIN_HAND,
+                    new BlockHitResult(leverPos.getCenter(), Direction.UP, leverPos, false),
+                    getSequenceNumber()));
+
+            // break piston
+            mc.player.connection.send(new ServerboundPlayerActionPacket(
+                    ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK,
+                    pistonPos,
+                    Direction.UP,
+                    blockDestroySeqNumber));
+
+            mc.level.destroyBlock(pistonPos, false);
+            mc.level.destroyBlock(pistonPos.relative(pistonDirection), false);
+
+            state = State.PLACE_REVERSE_PISTON;
+            state.handle(this);
         } else {
             if (tickCount > 10) {
                 reset("Wait for piston extend timeout");
@@ -340,29 +376,42 @@ public class BedrockBreaker implements Module {
         }
     }
 
-    private void handleWaitBedrockBreakState() {
+    private void handlePlaceReversePiston() {
+        assert mc.level != null;
+        assert mc.player != null;
+
+        int pistonSlot = findItem(Items.PISTON);
+        if (pistonSlot < 0) {
+            reset("Cannot select piston");
+            return;
+        }
+
+        BlockUtils.PlaceBlockPlan plan = BlockUtils.getPlacingPlan(pistonPos, false, BlockPlacingMethod.facing(pistonDirection.getOpposite()));
+        if (plan == null) {
+            reset("Cannot place reverse piston");
+            return;
+        }
+
+        mc.player.connection.send(new ServerboundSetCarriedItemPacket(pistonSlot));
+        mc.player.connection.send(new ServerboundMovePlayerPacket.Rot(
+                Float.isNaN(plan.rotation().yRot()) ? mc.player.getYRot() : plan.rotation().yRot(),
+                Float.isNaN(plan.rotation().xRot()) ? mc.player.getXRot() : plan.rotation().xRot(),
+                mc.player.onGround(),
+                false));
+        mc.player.connection.send(new ServerboundUseItemOnPacket(
+                InteractionHand.MAIN_HAND,
+                new BlockHitResult(plan.target(), plan.direction(), plan.neighbour(), false),
+                getSequenceNumber()));
+
+        state = State.WAIT_BEDROCK_BREAK;
+        tickCount = 0;
+    }
+
+    private void handleWaitBedrockBreak() {
         assert mc.player != null;
         assert mc.level != null;
 
-        if (mc.level.getBlockState(bedrockPos).isAir()) {
-            if (mc.level.getBlockState(bedrockPos.above()).is(Blocks.MOVING_PISTON)) {
-                // wait until moving piston converts to normal
-                return;
-            }
-
-            int pickaxeSlot = findItem(Items.NETHERITE_PICKAXE);
-            if (pickaxeSlot < 0) {
-                reset("Cannot select pickaxe");
-                return;
-            }
-
-            mc.player.connection.send(new ServerboundSetCarriedItemPacket(pickaxeSlot));
-            mc.player.connection.send(new ServerboundPlayerActionPacket(
-                    ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK,
-                    bedrockPos.above(),
-                    Direction.DOWN,
-                    getSequenceNumber()));
-
+        if (mc.level.getBlockState(bedrockPos).isAir() && !mc.level.getBlockState(pistonPos.relative(pistonDirection)).is(Blocks.MOVING_PISTON)) {
             BedrockBreakerConfig config = ConfigStore.instance.getConfig().bedrockBreakerConfig;
             if (config.replace) {
                 Item item = Registries.ITEMS.getValue(ResourceLocation.parse(config.replaceBlockId));
@@ -390,16 +439,116 @@ public class BedrockBreaker implements Module {
                         getSequenceNumber()));
             }
 
+            if (mc.level.getBlockState(leverPos).is(Blocks.LEVER)) {
+                state = State.BREAK_REMAINING_LEVER_START;
+            } else {
+                state = State.BREAK_REMAINING_PISTON_START;
+            }
+            state.handle(this);
+            tickCount = 0;
+        } else {
+            if (tickCount > 20) {
+                reset("Wait for bedrock break timeout");
+            }
+        }
+    }
+
+    private void handleBreakRemainingLeverStart() {
+        assert mc.player != null;
+
+        blockDestroyProgress = getLeverDestroyProgress();
+        blockDestroySeqNumber = getSequenceNumber();
+
+        mc.player.connection.send(new ServerboundPlayerActionPacket(
+                ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK,
+                leverPos,
+                Direction.DOWN,
+                blockDestroySeqNumber));
+
+        state = State.BREAK_REMAINING_LEVER_PROGRESS;
+    }
+
+    private void handleBreakRemainingLeverProgress() {
+        assert mc.player != null;
+
+        blockDestroyProgress += getLeverDestroyProgress();
+        if (blockDestroyProgress >= 1) {
+            mc.player.connection.send(new ServerboundPlayerActionPacket(
+                    ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK,
+                    leverPos,
+                    Direction.DOWN,
+                    blockDestroySeqNumber));
+
+            state = State.BREAK_REMAINING_PISTON_START;
+            state.handle(this);
+        } else {
+            if (tickCount > 30) {
+                reset("Lever break timeout");
+            }
+        }
+    }
+
+    private void handleBreakRemainingPistonStart() {
+        assert mc.player != null;
+
+        int pickaxeSlot = findPickaxe();
+        if (pickaxeSlot >= 0) {
+            mc.player.getInventory().selected = pickaxeSlot;
+        }
+
+        mc.player.connection.send(new ServerboundSetCarriedItemPacket(mc.player.getInventory().selected));
+
+        blockDestroyProgress = getPistonDestroyProgress();
+        blockDestroySeqNumber = getSequenceNumber();
+
+        mc.player.connection.send(new ServerboundPlayerActionPacket(
+                ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK,
+                pistonPos,
+                Direction.DOWN,
+                blockDestroySeqNumber));
+
+        state = State.BREAK_REMAINING_PISTON_PROGRESS;
+        tickCount = 0;
+    }
+
+    private void handleBreakRemainingPistonProgress() {
+        assert mc.player != null;
+        assert mc.level != null;
+
+        blockDestroyProgress += getPistonDestroyProgress();
+        if (blockDestroyProgress >= 1) {
+            mc.player.connection.send(new ServerboundPlayerActionPacket(
+                    ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK,
+                    pistonPos,
+                    Direction.DOWN,
+                    blockDestroySeqNumber));
+
+            mc.level.destroyBlock(pistonPos, false);
+
             reset(null);
 
             if (!queue.isEmpty()) {
                 start(queue.remove());
             }
         } else {
-            if (tickCount > 20) {
-                reset("Wait for bedrock break timeout");
+            if (tickCount > 50) {
+                reset("Wait for remaining piston break timeout");
             }
         }
+    }
+
+    private float getPistonDestroyProgress() {
+        assert mc.level != null;
+        assert mc.player != null;
+
+        return Blocks.PISTON.defaultBlockState().getDestroyProgress(mc.player, mc.level, pistonPos);
+    }
+
+    private float getLeverDestroyProgress() {
+        assert mc.level != null;
+        assert mc.player != null;
+
+        return Blocks.LEVER.defaultBlockState().getDestroyProgress(mc.player, mc.level, pistonPos);
     }
 
     private int findItem(Item item) {
@@ -408,6 +557,19 @@ public class BedrockBreaker implements Module {
         Inventory inventory = mc.player.getInventory();
         for (int i = 0; i < 9; i++) {
             if (inventory.getItem(i).is(item)) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    private int findPickaxe() {
+        assert mc.player != null;
+
+        Inventory inventory = mc.player.getInventory();
+        for (int i = 0; i < 9; i++) {
+            if (inventory.getItem(i).getTags().anyMatch(tag -> tag == ItemTags.PICKAXES)) {
                 return i;
             }
         }
@@ -425,11 +587,20 @@ public class BedrockBreaker implements Module {
         return num;
     }
 
+    private boolean isValidY(int y) {
+        assert mc.level != null;
+
+        DimensionType dimension = mc.level.dimensionType();
+        return dimension.minY() <= y && y < dimension.minY() + dimension.height();
+    }
+
     private Direction[] sortByDistance(BlockPos origin, Direction[] directions) {
+        assert mc.player != null;
+
         return Arrays.stream(directions)
                 .map(d -> new Pair<>(d, origin.relative(d).distToCenterSqr(mc.player.getEyePosition())))
                 .sorted(Comparator.comparingDouble(Pair::getSecond))
-                .map(p -> p.getFirst())
+                .map(Pair::getFirst)
                 .toArray(Direction[]::new);
     }
 
@@ -462,12 +633,27 @@ public class BedrockBreaker implements Module {
     }
 
     private enum State {
-        INIT,
-        START,
-        PLACE_TORCH,
-        PLACE_SUPPORT_BLOCK,
-        WAIT_SUPPORT_BLOCK,
-        WAIT_PISTON_EXTEND,
-        WAIT_BEDROCK_BREAK
+        INIT(instance -> {}),
+        START(BedrockBreaker::handleStart),
+        PLACE_LEVER(BedrockBreaker::handlePlaceLever),
+        BREAK_PISTON_START(BedrockBreaker::handleBreakPistonStart),
+        BREAK_PISTON_PROGRESS(BedrockBreaker::handleBreakPistonProgress),
+        WAIT_PISTON_EXTEND(BedrockBreaker::handleWaitPistonExtend),
+        PLACE_REVERSE_PISTON(BedrockBreaker::handlePlaceReversePiston),
+        WAIT_BEDROCK_BREAK(BedrockBreaker::handleWaitBedrockBreak),
+        BREAK_REMAINING_LEVER_START(BedrockBreaker::handleBreakRemainingLeverStart),
+        BREAK_REMAINING_LEVER_PROGRESS(BedrockBreaker::handleBreakRemainingLeverProgress),
+        BREAK_REMAINING_PISTON_START(BedrockBreaker::handleBreakRemainingPistonStart),
+        BREAK_REMAINING_PISTON_PROGRESS(BedrockBreaker::handleBreakRemainingPistonProgress);
+
+        private final Consumer<BedrockBreaker> action;
+
+        State(Consumer<BedrockBreaker> action) {
+            this.action = action;
+        }
+
+        public void handle(BedrockBreaker instance) {
+            action.accept(instance);
+        }
     }
 }
