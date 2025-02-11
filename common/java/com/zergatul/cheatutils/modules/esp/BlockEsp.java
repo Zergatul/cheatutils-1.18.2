@@ -93,9 +93,9 @@ public class BlockEsp {
                 }
 
                 for (BlockPos pos : bbList) {
-                    float x = pos.getX();
-                    float y = pos.getY();
-                    float z = pos.getZ();
+                    double x = pos.getX();
+                    double y = pos.getY();
+                    double z = pos.getZ();
                     renderer.cuboid(x, y, z, x + 1, y + 1, z + 1);
                 }
 

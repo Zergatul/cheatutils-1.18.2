@@ -36,5 +36,14 @@
                 Replace bedrock with another block (to prevent items falling into the void).
             </div>
         </fieldset>
+
+        <fieldset>
+            <legend>
+                <switch-checkbox v-model="config.allBlocks" @change="update()">Apply to all blocks</switch-checkbox>
+            </legend>
+            <div class="section-description">
+                In this mode module will work for any block you target, not just Bedrock.
+            </div>
+        </fieldset>
     </div>
 </div>

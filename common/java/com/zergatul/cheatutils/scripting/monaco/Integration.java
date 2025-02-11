@@ -11,12 +11,12 @@ import com.zergatul.scripting.binding.Binder;
 import com.zergatul.scripting.binding.BinderOutput;
 import com.zergatul.scripting.binding.nodes.BoundNode;
 import com.zergatul.scripting.compiler.CompilationParameters;
+import com.zergatul.scripting.completion.CompletionProvider;
 import com.zergatul.scripting.lexer.*;
 import com.zergatul.scripting.parser.NodeType;
 import com.zergatul.scripting.parser.Parser;
 import com.zergatul.scripting.parser.ParserOutput;
 import com.zergatul.scripting.parser.ParserTreeVisitor;
-import com.zergatul.scripting.parser.nodes.BinaryOperatorNode;
 import com.zergatul.scripting.parser.nodes.CompilationUnitNode;
 import com.zergatul.scripting.parser.nodes.CustomTypeNode;
 
@@ -36,7 +36,7 @@ public class Integration {
         Theme light = new WhiteTheme();
         DocumentationProvider documentationProvider = new DocumentationProvider();
         DefinitionProvider definitionProvider = new DefinitionProvider();
-        CompletionProvider completionProvider = new CompletionProvider(documentationProvider);
+        CompletionProvider<Suggestion> completionProvider = new CompletionProvider<>(new MonacoSuggestionFactory(documentationProvider));
 
         Pattern regex = Pattern.compile("Java<com\\.zergatul\\.cheatutils\\.scripting\\.modules\\.(.+)>");
 

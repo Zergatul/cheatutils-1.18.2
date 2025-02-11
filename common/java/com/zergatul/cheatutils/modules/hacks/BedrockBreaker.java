@@ -78,7 +78,7 @@ public class BedrockBreaker implements Module {
 
         BlockHitResult hitResult = (BlockHitResult) mc.hitResult;
         BlockPos pos = hitResult.getBlockPos();
-        if (mc.level.getBlockState(pos).getBlock() != Blocks.BEDROCK) {
+        if (!isValidBlock(pos)) {
             return;
         }
 
@@ -101,6 +101,8 @@ public class BedrockBreaker implements Module {
             return;
         }
 
+        BedrockBreakerConfig config = ConfigStore.instance.getConfig().bedrockBreakerConfig;
+
         //Predicate<BlockPos> condition = pos -> Math.abs(pos.getX()) <= 100 && Math.abs(pos.getZ()) <= 100;
         Predicate<BlockPos> condition = pos -> true;
 
@@ -109,9 +111,9 @@ public class BedrockBreaker implements Module {
         Map<Integer, List<BlockPos>> map = positions.stream().collect(Collectors.groupingBy(Vec3i::getY));
         for (int y : map.keySet().stream().sorted(Comparator.reverseOrder()).toList()) {
             List<BlockPos> layer = map.get(y);
-            if (layer.stream().anyMatch(p -> condition.test(p) && mc.level.getBlockState(p).is(Blocks.BEDROCK))) {
+            if (layer.stream().anyMatch(p -> condition.test(p) && isValidBlock(config, p))) {
                 for (BlockPos pos : layer) {
-                    if (condition.test(pos) && mc.level.getBlockState(pos).is(Blocks.BEDROCK)) {
+                    if (condition.test(pos) && isValidBlock(config, pos)) {
                         queue.add(pos);
                     }
                 }
@@ -197,9 +199,21 @@ public class BedrockBreaker implements Module {
             if (!isValidY(bedrockPos.relative(direction).getY())) {
                 continue;
             }
-            leverDirection = direction;
-            leverPos = bedrockPos.relative(direction);
-            break;
+
+            BlockPos possibleLeverPos = bedrockPos.relative(direction);
+            BlockState leverBlockState = Blocks.LEVER.getStateForPlacement(new BlockPlaceContext(
+                    mc.player,
+                    InteractionHand.MAIN_HAND,
+                    new ItemStack(Items.LEVER, 1),
+                    new BlockHitResult(possibleLeverPos.getCenter(), direction.getOpposite(), bedrockPos, false)));
+            if (leverBlockState == null) {
+                continue;
+            }
+            if (((BlockBehaviourAccessor) Blocks.LEVER).canSurvive_CU(leverBlockState, mc.level, possibleLeverPos)) {
+                leverDirection = direction;
+                leverPos = possibleLeverPos;
+                break;
+            }
         }
         if (leverPos == null) {
             // find location for lever around piston
@@ -551,6 +565,15 @@ public class BedrockBreaker implements Module {
         return Blocks.LEVER.defaultBlockState().getDestroyProgress(mc.player, mc.level, pistonPos);
     }
 
+    private boolean isValidBlock(BlockPos pos) {
+        return isValidBlock(ConfigStore.instance.getConfig().bedrockBreakerConfig, pos);
+    }
+
+    private boolean isValidBlock(BedrockBreakerConfig config, BlockPos pos) {
+        assert mc.level != null;
+        return config.allBlocks || mc.level.getBlockState(pos).is(Blocks.BEDROCK);
+    }
+
     private int findItem(Item item) {
         assert mc.player != null;
 
@@ -609,7 +632,7 @@ public class BedrockBreaker implements Module {
             return;
         }
 
-        if (!mc.level.getBlockState(pos).is(Blocks.BEDROCK)) {
+        if (!isValidBlock(pos)) {
             return;
         }
 
