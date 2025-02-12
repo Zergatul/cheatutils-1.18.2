@@ -5,7 +5,6 @@ import com.zergatul.cheatutils.common.Events;
 import com.zergatul.cheatutils.common.Registries;
 import com.zergatul.cheatutils.configs.BedrockBreakerConfig;
 import com.zergatul.cheatutils.configs.ConfigStore;
-import com.zergatul.cheatutils.mixins.common.accessors.BlockBehaviourAccessor;
 import com.zergatul.cheatutils.mixins.common.accessors.ClientLevelAccessor;
 import com.zergatul.cheatutils.modules.Module;
 import com.zergatul.cheatutils.scripting.Root;
@@ -30,7 +29,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LeverBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.AttachFace;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -53,8 +54,8 @@ public class BedrockBreaker implements Module {
     private BlockPos pistonPos;
     private float blockDestroyProgress;
     private int blockDestroySeqNumber;
-    private Direction leverDirection;
     private BlockPos leverPos;
+    private BlockHitResult leverPlaceHitResult;
     private State state = State.INIT;
     private int tickCount;
 
@@ -186,75 +187,7 @@ public class BedrockBreaker implements Module {
 
         pistonPos = bedrockPos.relative(pistonDirection);
 
-        leverDirection = null;
-        leverPos = null;
-        // find location for lever around bedrock
-        for (Direction direction : sortByDistance(bedrockPos, Direction.values())) {
-            if (direction == pistonDirection) {
-                continue;
-            }
-            if (!mc.level.getBlockState(bedrockPos.relative(direction)).canBeReplaced()) {
-                continue;
-            }
-            if (!isValidY(bedrockPos.relative(direction).getY())) {
-                continue;
-            }
-
-            BlockPos possibleLeverPos = bedrockPos.relative(direction);
-            BlockState leverBlockState = Blocks.LEVER.getStateForPlacement(new BlockPlaceContext(
-                    mc.player,
-                    InteractionHand.MAIN_HAND,
-                    new ItemStack(Items.LEVER, 1),
-                    new BlockHitResult(possibleLeverPos.getCenter(), direction.getOpposite(), bedrockPos, false)));
-            if (leverBlockState == null) {
-                continue;
-            }
-            if (((BlockBehaviourAccessor) Blocks.LEVER).canSurvive_CU(leverBlockState, mc.level, possibleLeverPos)) {
-                leverDirection = direction;
-                leverPos = possibleLeverPos;
-                break;
-            }
-        }
-        if (leverPos == null) {
-            // find location for lever around piston
-            leverLocSearch:
-            for (Direction direction : sortByDistance(pistonPos, Direction.values())) {
-                if (direction == pistonDirection) {
-                    continue;
-                }
-                if (direction == pistonDirection.getOpposite()) {
-                    continue;
-                }
-                BlockPos possibleLeverPos = pistonPos.relative(direction);
-                if (!isValidY(possibleLeverPos.getY())) {
-                    continue;
-                }
-                for (Direction dir : sortByDistance(possibleLeverPos, Direction.values())) {
-                    BlockPos possibleSupportBlockPos = possibleLeverPos.relative(dir);
-                    if (possibleSupportBlockPos.equals(pistonPos)) {
-                        continue; // do not attach lever to piston
-                    }
-                    if (mc.level.getBlockState(possibleSupportBlockPos).canBeReplaced()) {
-                        continue;
-                    }
-                    BlockState leverBlockState = Blocks.LEVER.getStateForPlacement(new BlockPlaceContext(
-                            mc.player,
-                            InteractionHand.MAIN_HAND,
-                            new ItemStack(Items.LEVER, 1),
-                            new BlockHitResult(possibleLeverPos.getCenter(), dir.getOpposite(), possibleSupportBlockPos, false)));
-                    if (leverBlockState == null) {
-                        continue;
-                    }
-                    if (((BlockBehaviourAccessor) Blocks.LEVER).canSurvive_CU(leverBlockState, mc.level, possibleLeverPos)) {
-                        leverDirection = dir;
-                        leverPos = possibleLeverPos;
-                        break leverLocSearch;
-                    }
-                }
-            }
-        }
-
-        if (leverPos == null) {
+        if (!findLocationForLever()) {
             reset("Cannot find location to place lever");
             return;
         }
@@ -290,22 +223,10 @@ public class BedrockBreaker implements Module {
             return;
         }
 
-        BlockUtils.PlaceBlockPlan plan = BlockUtils.getPlacingPlan(leverPos, false, switch (leverDirection) {
-            case NORTH -> BlockPlacingMethod.FROM_NORTH;
-            case SOUTH -> BlockPlacingMethod.FROM_SOUTH;
-            case EAST -> BlockPlacingMethod.FROM_EAST;
-            case WEST -> BlockPlacingMethod.FROM_WEST;
-            default -> BlockPlacingMethod.ANY;
-        }, Blocks.LEVER.defaultBlockState());
-        if (plan == null) {
-            reset("Cannot place lever");
-            return;
-        }
-
         mc.player.connection.send(new ServerboundSetCarriedItemPacket(leverSlot));
         mc.player.connection.send(new ServerboundUseItemOnPacket(
                 InteractionHand.MAIN_HAND,
-                new BlockHitResult(plan.target(), plan.direction(), plan.neighbour(), false),
+                leverPlaceHitResult,
                 getSequenceNumber()));
 
         state = State.BREAK_PISTON_START;
@@ -551,6 +472,92 @@ public class BedrockBreaker implements Module {
         }
     }
 
+    private boolean findLocationForLever() {
+        assert mc.level != null;
+        assert mc.player != null;
+
+        leverPos = null;
+
+        // find location for lever around bedrock
+        for (Direction direction : sortByDistance(bedrockPos, Direction.values())) {
+            BlockPos possibleLeverPos = bedrockPos.relative(direction);
+            if (direction == pistonDirection) {
+                continue;
+            }
+            if (!mc.level.getBlockState(possibleLeverPos).canBeReplaced()) {
+                continue;
+            }
+            if (!isValidY(possibleLeverPos.getY())) {
+                continue;
+            }
+
+            BlockHitResult hit = new BlockHitResult(
+                    bedrockPos.getCenter().add(direction.getUnitVec3().multiply(0.5, 0.5, 0.5)),
+                    direction,
+                    bedrockPos,
+                    false);
+            BlockState leverBlockState = Blocks.LEVER.getStateForPlacement(new BlockPlaceContext(
+                    mc.player,
+                    InteractionHand.MAIN_HAND,
+                    new ItemStack(Items.LEVER, 1),
+                    hit));
+            if (leverBlockState == null) {
+                continue;
+            }
+            if (isLeverStateMatch(leverBlockState, direction)) {
+                leverPos = possibleLeverPos;
+                leverPlaceHitResult = hit;
+                return true;
+            }
+        }
+
+        // find location for lever around piston
+        for (Direction direction : sortByDistance(pistonPos, Direction.values())) {
+            if (direction == pistonDirection) {
+                continue;
+            }
+            if (direction == pistonDirection.getOpposite()) {
+                continue;
+            }
+            BlockPos possibleLeverPos = pistonPos.relative(direction);
+            if (!mc.level.getBlockState(possibleLeverPos).canBeReplaced()) {
+                continue;
+            }
+            if (!isValidY(possibleLeverPos.getY())) {
+                continue;
+            }
+            for (Direction dir : sortByDistance(possibleLeverPos, Direction.values())) {
+                BlockPos possibleSupportPos = possibleLeverPos.relative(dir);
+                if (possibleSupportPos.equals(pistonPos)) {
+                    continue; // do not attach lever to piston
+                }
+                if (mc.level.getBlockState(possibleSupportPos).canBeReplaced()) {
+                    continue;
+                }
+                BlockHitResult hit = new BlockHitResult(
+                        possibleSupportPos.getCenter().add(dir.getOpposite().getUnitVec3().multiply(0.5, 0.5, 0.5)),
+                        dir.getOpposite(),
+                        possibleSupportPos,
+                        false);
+                BlockState leverBlockState = Blocks.LEVER.getStateForPlacement(new BlockPlaceContext(
+                        mc.player,
+                        InteractionHand.MAIN_HAND,
+                        new ItemStack(Items.LEVER, 1),
+                        hit));
+                if (leverBlockState == null) {
+                    continue;
+                }
+                if (isLeverStateMatch(leverBlockState, dir.getOpposite())) {
+                    leverPos = possibleLeverPos;
+                    leverPlaceHitResult = hit;
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     private float getPistonDestroyProgress() {
         assert mc.level != null;
         assert mc.player != null;
@@ -625,6 +632,14 @@ public class BedrockBreaker implements Module {
                 .sorted(Comparator.comparingDouble(Pair::getSecond))
                 .map(Pair::getFirst)
                 .toArray(Direction[]::new);
+    }
+
+    private boolean isLeverStateMatch(BlockState state, Direction direction) {
+        return switch (direction) {
+            case UP -> state.getValue(LeverBlock.FACE) == AttachFace.FLOOR;
+            case DOWN -> state.getValue(LeverBlock.FACE) == AttachFace.CEILING;
+            default -> state.getValue(LeverBlock.FACE) == AttachFace.WALL && state.getValue(LeverBlock.FACING) == direction;
+        };
     }
 
     private void start(BlockPos pos) {
