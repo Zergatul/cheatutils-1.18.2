@@ -32,11 +32,15 @@ public class BlockInfoApi extends ApiBase {
         public BlockInfo(Block block) {
             id = Registries.BLOCKS.getKey(block).toString();
 
-            MutableComponent text = block.getName();
-            if (text.getContents() instanceof TranslatableContents) {
-                name = I18n.get(((TranslatableContents) text.getContents()).getKey());
-            } else {
-                name = id;
+            try {
+                MutableComponent text = block.getName();
+                if (text.getContents() instanceof TranslatableContents) {
+                    name = I18n.get(((TranslatableContents) text.getContents()).getKey());
+                }
+            } finally {
+                if (name == null) {
+                    name = id;
+                }
             }
         }
     }
