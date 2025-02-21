@@ -37,6 +37,8 @@ public class BlockInfoApi extends ApiBase {
                 if (text.getContents() instanceof TranslatableContents) {
                     name = I18n.get(((TranslatableContents) text.getContents()).getKey());
                 }
+            } catch (Throwable ignored) {
+
             } finally {
                 if (name == null) {
                     name = id;
