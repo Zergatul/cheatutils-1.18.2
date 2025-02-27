@@ -150,9 +150,12 @@ public class BlockAutomation {
                 if (breakCurrentBlock && !mc.level.isEmptyBlock(pos) && selectItemForBlockBreak(config)) {
                     currentDestroyingBlock = pos;
                     mc.gameMode.startDestroyBlock(pos, Direction.UP);
-                    if (mc.gameMode.continueDestroyBlock(currentDestroyingBlock, Direction.UP)) {
-                        mc.player.swing(InteractionHand.MAIN_HAND);
+                    // if we call continueDestroyBlock after we block is destroyed
+                    // it can trigger destroying next block we don't want to touch
+                    if (mc.gameMode.isDestroying()) {
+                        mc.gameMode.continueDestroyBlock(currentDestroyingBlock, Direction.UP);
                     }
+                    mc.player.swing(InteractionHand.MAIN_HAND);
                     actionPerformed = true;
                     continue actionLoop;
                 } else if (hand != null) {
