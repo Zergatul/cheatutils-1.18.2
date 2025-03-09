@@ -2,12 +2,11 @@ package com.zergatul.cheatutils.webui;
 
 import com.zergatul.cheatutils.configs.ConfigStore;
 import com.zergatul.scripting.compiler.CompilationResult;
-import org.apache.http.HttpException;
 
 public abstract class CodeApiBase<T> extends ApiBase {
 
     @Override
-    public String post(String code) throws HttpException {
+    public String post(String code) {
         code = gson.fromJson(code, String.class);
 
         if (code == null || code.isEmpty()) {
@@ -17,12 +16,7 @@ public abstract class CodeApiBase<T> extends ApiBase {
             return "{ \"ok\": true }";
         }
 
-        CompilationResult result;
-        try {
-            result = compile(code);
-        } catch (Throwable e) {
-            throw new HttpException(e.getMessage());
-        }
+        CompilationResult result = compile(code);
         if (result.getProgram() != null) {
             setCode(code);
             ConfigStore.instance.requestWrite();

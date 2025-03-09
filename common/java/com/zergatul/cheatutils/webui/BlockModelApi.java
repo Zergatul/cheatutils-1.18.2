@@ -23,8 +23,6 @@ import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import org.apache.http.HttpException;
-import org.apache.http.MethodNotSupportedException;
 
 import java.util.*;
 
@@ -38,11 +36,11 @@ public class BlockModelApi extends ApiBase {
     }
 
     @Override
-    public String get(String id) throws HttpException {
+    public String get(String id) throws ApiException {
         ResourceLocation loc = ResourceLocation.parse(id);
         Block block = Registries.BLOCKS.getValue(loc);
         if (block == null) {
-            throw new MethodNotSupportedException("Cannot find block by id.");
+            throw new ApiException("Cannot find block by id.", HttpResponseCodes.NOT_FOUND);
         }
 
         List<Quad> quads = getFromBlockModel(block);

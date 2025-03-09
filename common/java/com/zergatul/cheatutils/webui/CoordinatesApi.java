@@ -3,7 +3,6 @@ package com.zergatul.cheatutils.webui;
 import com.zergatul.cheatutils.controllers.ClientTickController;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.phys.Vec3;
-import org.apache.http.HttpException;
 
 public class CoordinatesApi extends ApiBase {
 
@@ -13,7 +12,7 @@ public class CoordinatesApi extends ApiBase {
     }
 
     @Override
-    public String get() throws HttpException {
+    public String get() {
         Vec3 pos = ClientTickController.instance.getResult(() -> {
             Minecraft mc = Minecraft.getInstance();
             if (mc.player == null) {

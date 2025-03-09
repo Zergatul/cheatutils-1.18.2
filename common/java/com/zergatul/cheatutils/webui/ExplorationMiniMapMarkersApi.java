@@ -3,7 +3,6 @@ package com.zergatul.cheatutils.webui;
 import com.google.common.reflect.TypeToken;
 import com.zergatul.cheatutils.chunkoverlays.ExplorationMiniMapChunkOverlay;
 import com.zergatul.cheatutils.controllers.ChunkOverlayController;
-import org.apache.http.HttpException;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -18,13 +17,13 @@ public class ExplorationMiniMapMarkersApi extends ApiBase {
     }
 
     @Override
-    public String post(String body) throws HttpException {
+    public String post(String body) {
         ChunkOverlayController.instance.ofType(ExplorationMiniMapChunkOverlay.class).addMarker();
         return "true";
     }
 
     @Override
-    public String put(String id, String body) throws HttpException {
+    public String put(String id, String body) {
         if (Objects.equals(id, "import")) {
             Type listType = new TypeToken<ArrayList<Point>>(){}.getType();
             List<Point> points = gson.fromJson(body, listType);
@@ -44,7 +43,7 @@ public class ExplorationMiniMapMarkersApi extends ApiBase {
     }
 
     @Override
-    public String delete(String id) throws HttpException {
+    public String delete(String id) {
         ChunkOverlayController.instance.ofType(ExplorationMiniMapChunkOverlay.class).clearMarkers();
         return "true";
     }

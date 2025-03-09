@@ -180,7 +180,6 @@ public class Integration {
                     }
                     exchange.close();
                 } catch (Throwable e) {
-                    e.printStackTrace();
                     exchange.sendResponseHeaders(503, 0);
                     exchange.close();
                 }

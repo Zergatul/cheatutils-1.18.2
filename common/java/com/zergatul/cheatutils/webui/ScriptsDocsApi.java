@@ -4,7 +4,6 @@ import com.zergatul.cheatutils.scripting.*;
 import com.zergatul.scripting.InterfaceHelper;
 import com.zergatul.scripting.type.CustomType;
 import org.apache.commons.lang3.StringEscapeUtils;
-import org.apache.http.HttpException;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -22,7 +21,7 @@ public class ScriptsDocsApi extends ApiBase {
     }
 
     @Override
-    public String get(String id) throws HttpException {
+    public String get(String id) {
         ScriptType type = ScriptType.valueOf(id);
         List<String> refs = new ArrayList<>();
         refs.add(formatFuncMethod(InterfaceHelper.getFuncInterfaceMethod(type.createParameters().getFunctionalInterface())));

@@ -21,7 +21,11 @@ export function createComponent(template) {
         },
         setup(props) {
             const onClick = module => {
-                window.location.hash = '#/' + module.path;
+                if (module.onClick) {
+                    module.onClick();
+                } else {
+                    window.location.hash = '#/' + module.path;
+                }
             };
 
             return {

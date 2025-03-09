@@ -13,47 +13,57 @@ public enum ScriptType {
     KEYBINDING(
             new ApiType[] { ApiType.ACTION, ApiType.UPDATE },
             AsyncRunnable.class,
+            "KeyBindingScript",
             SVoidType.instance),
 
     OVERLAY(
             new ApiType[] { ApiType.OVERLAY },
-            Runnable.class),
+            Runnable.class,
+            "StatusOverlayScript"),
 
     BLOCK_AUTOMATION(
             new ApiType[] { ApiType.BLOCK_AUTOMATION },
-            BlockPosConsumer.class),
+            BlockPosConsumer.class,
+            "BlockAutomationScript"),
 
     VILLAGER_ROLLER(
             new ApiType[] { ApiType.VILLAGER_ROLLER, ApiType.LOGGING },
-            Runnable.class),
+            Runnable.class,
+            "VillagerRollerScript"),
 
     EVENTS(
             new ApiType[] { ApiType.ACTION, ApiType.UPDATE, ApiType.EVENTS },
-            Runnable.class),
+            Runnable.class,
+            "EventsScripting"),
 
     ENTITY_ESP(
             new ApiType[] { ApiType.CURRENT_ENTITY_ESP },
-            EntityEspConsumer.class),
+            EntityEspConsumer.class,
+            "EntityEspScript"),
 
     KILL_AURA(
             new ApiType[0],
-            KillAuraFunction.class),
+            KillAuraFunction.class,
+            "KillAuraScript"),
 
     HITBOX_SIZE(
             new ApiType[0],
-            HitboxSizeFunction.class);
+            HitboxSizeFunction.class,
+            "HitboxSizeScript");
 
     private final ApiType[] apis;
     private final Class<?> funcInterface;
+    private final String name;
     private final SType asyncReturnType;
 
-    ScriptType(ApiType[] apis, Class<?> funcInterface) {
-        this(apis, funcInterface, null);
+    ScriptType(ApiType[] apis, Class<?> funcInterface, String name) {
+        this(apis, funcInterface, name, null);
     }
 
-    ScriptType(ApiType[] apis, Class<?> funcInterface, SType asyncReturnType) {
+    ScriptType(ApiType[] apis, Class<?> funcInterface, String name, SType asyncReturnType) {
         this.apis = apis;
         this.funcInterface = funcInterface;
+        this.name = name;
         this.asyncReturnType = asyncReturnType;
     }
 
@@ -88,6 +98,9 @@ public enum ScriptType {
                         return VisibilityCheck.isOk(method, apis);
                     }
                 })
+                .setClassNamePrefix(name)
+                .setSourceFile("<" + name + ">")
+                .setLineNumbers(true)
                 .build();
     }
 }

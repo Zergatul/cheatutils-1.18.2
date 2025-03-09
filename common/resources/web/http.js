@@ -1,4 +1,4 @@
-async function throwIsFailed(response) {
+async function throwIfFailed(response) {
     if (!response.ok) {
         throw {
             code: response.status,
@@ -9,13 +9,13 @@ async function throwIsFailed(response) {
 
 export async function get(url) {
     let response = await fetch(url);
-    throwIsFailed(response);
+    await throwIfFailed(response);
     return await response.json();
 }
 
 export async function getText(url) {
     let response = await fetch(url);
-    throwIsFailed(response);
+    await throwIfFailed(response);
     return await response.text();
 }
 
@@ -24,7 +24,7 @@ export async function post(url, body) {
         method: 'POST',
         body: JSON.stringify(body)
     });
-    throwIsFailed(response);
+    await throwIfFailed(response);
     return await response.json();
 }
 
@@ -33,7 +33,7 @@ export async function put(url, body) {
         method: 'PUT',
         body: JSON.stringify(body)
     });
-    throwIsFailed(response);
+    await throwIfFailed(response);
     return await response.json();
 }
 
@@ -42,7 +42,7 @@ async function delete$(url, body) {
         method: 'DELETE',
         body: JSON.stringify(body)
     });
-    throwIsFailed(response);
+    await throwIfFailed(response);
     return await response.json();
 }
 

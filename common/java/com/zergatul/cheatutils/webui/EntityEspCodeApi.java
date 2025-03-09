@@ -5,8 +5,6 @@ import com.zergatul.cheatutils.configs.ConfigStore;
 import com.zergatul.cheatutils.configs.EntityEspConfig;
 import com.zergatul.cheatutils.controllers.ScriptsController;
 import com.zergatul.scripting.compiler.CompilationResult;
-import org.apache.http.HttpException;
-import org.apache.http.MethodNotSupportedException;
 
 public class EntityEspCodeApi extends ApiBase {
 
@@ -16,7 +14,7 @@ public class EntityEspCodeApi extends ApiBase {
     }
 
     @Override
-    public String post(String json) throws HttpException {
+    public String post(String json) throws ApiException {
         Request request = gson.fromJson(json, Request.class);
 
         EntityEspConfig config = ConfigStore.instance.getConfig().entities.configs.stream()
@@ -24,7 +22,7 @@ public class EntityEspCodeApi extends ApiBase {
                 .findFirst()
                 .orElse(null);
         if (config == null) {
-            throw new MethodNotSupportedException("Cannot find entity config.");
+            throw new ApiException("Cannot find entity config.", HttpResponseCodes.NOT_FOUND);
         }
 
         if (request.code == null || request.code.isBlank()) {
@@ -36,12 +34,7 @@ public class EntityEspCodeApi extends ApiBase {
             return "{ \"ok\": true }";
         }
 
-        CompilationResult result;
-        try {
-            result = ScriptsController.instance.compileEntityEsp(request.code);
-        } catch (Throwable e) {
-            throw new HttpException(e.getMessage());
-        }
+        CompilationResult result = ScriptsController.instance.compileEntityEsp(request.code);
         if (result.getProgram() != null) {
             RenderSystem.recordRenderCall(() -> {
                 config.code = request.code;

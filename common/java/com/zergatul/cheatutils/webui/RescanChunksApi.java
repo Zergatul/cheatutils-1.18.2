@@ -1,7 +1,6 @@
 package com.zergatul.cheatutils.webui;
 
 import com.zergatul.cheatutils.modules.esp.BlockFinder;
-import org.apache.http.HttpException;
 
 public class RescanChunksApi extends ApiBase {
 
@@ -11,7 +10,7 @@ public class RescanChunksApi extends ApiBase {
     }
 
     @Override
-    public String post(String body) throws HttpException {
+    public String post(String body) {
         BlockFinder.instance.rescan();
         return "{}";
     }

@@ -6,7 +6,6 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import org.apache.http.MethodNotSupportedException;
 
 import java.util.Collection;
 
@@ -18,7 +17,7 @@ public class BlockInfoApi extends ApiBase {
     }
 
     @Override
-    public String get() throws MethodNotSupportedException {
+    public String get() {
         Collection<Block> blocks = Registries.BLOCKS.getValues();
         Object[] result = blocks.stream().filter(b -> !b.equals(Blocks.AIR)).map(BlockInfo::new).toArray();
         return gson.toJson(result);

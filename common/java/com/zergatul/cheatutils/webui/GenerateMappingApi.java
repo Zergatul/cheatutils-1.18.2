@@ -2,7 +2,6 @@ package com.zergatul.cheatutils.webui;
 
 import com.zergatul.cheatutils.utils.mappings.ContainerMenuMappingGenerator;
 import com.zergatul.cheatutils.utils.mappings.EntityMappingGenerator;
-import org.apache.http.HttpException;
 
 public class GenerateMappingApi extends ApiBase {
 
@@ -12,7 +11,7 @@ public class GenerateMappingApi extends ApiBase {
     }
 
     @Override
-    public String get(String id) throws HttpException {
+    public String get(String id) {
         if (id.equals("entity")) {
             return EntityMappingGenerator.generate();
         }

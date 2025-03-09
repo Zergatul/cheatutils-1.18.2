@@ -4,7 +4,6 @@ import com.zergatul.cheatutils.schematics.InvalidFormatException;
 import com.zergatul.cheatutils.schematics.SchemaFile;
 import com.zergatul.cheatutils.schematics.SchemaFormatFactory;
 import net.minecraft.world.level.block.state.BlockState;
-import org.apache.http.HttpException;
 
 import java.io.IOException;
 import java.util.Base64;
@@ -17,7 +16,7 @@ public class SchematicaUploadApi extends ApiBase {
     }
 
     @Override
-    public String post(String body) throws HttpException {
+    public String post(String body) {
         Request request = gson.fromJson(body, Request.class);
         byte[] data = Base64.getDecoder().decode(request.file);
         SchemaFile schema;

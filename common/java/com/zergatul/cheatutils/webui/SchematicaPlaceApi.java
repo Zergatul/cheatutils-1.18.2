@@ -9,7 +9,6 @@ import com.zergatul.cheatutils.schematics.SchemaFormatFactory;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import org.apache.http.HttpException;
 
 import java.io.IOException;
 import java.util.Base64;
@@ -22,16 +21,10 @@ public class SchematicaPlaceApi extends ApiBase {
     }
 
     @Override
-    public String post(String body) throws HttpException {
+    public String post(String body) throws IOException, InvalidFormatException {
         Request request = gson.fromJson(body, Request.class);
         byte[] data = Base64.getDecoder().decode(request.file);
-        SchemaFile schema;
-        try {
-            schema = SchemaFormatFactory.parse(data, request.name);
-        }
-        catch (IOException | InvalidFormatException e) {
-            throw new HttpException(e.getMessage());
-        }
+        SchemaFile schema = SchemaFormatFactory.parse(data, request.name);
 
         // replace palette
         for (PaletteEntry entry : request.palette) {
@@ -48,7 +41,7 @@ public class SchematicaPlaceApi extends ApiBase {
     }
 
     @Override
-    public String delete(String id) throws HttpException {
+    public String delete(String id) {
         SchematicaController.instance.clear();
         return "{}";
     }

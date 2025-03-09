@@ -1,7 +1,6 @@
 package com.zergatul.cheatutils.webui;
 
 import com.zergatul.cheatutils.utils.EntityUtils;
-import org.apache.http.HttpException;
 
 public class EntityInfoApi extends ApiBase {
 
@@ -11,7 +10,7 @@ public class EntityInfoApi extends ApiBase {
     }
 
     @Override
-    public String get() throws HttpException {
+    public String get() {
         return gson.toJson(EntityUtils.getEntityClasses());
     }
 }

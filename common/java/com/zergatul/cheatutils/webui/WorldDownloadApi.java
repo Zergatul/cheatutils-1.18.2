@@ -1,8 +1,6 @@
 package com.zergatul.cheatutils.webui;
 
 import com.zergatul.cheatutils.controllers.WorldDownloadController;
-import org.apache.http.HttpException;
-import org.apache.http.MethodNotSupportedException;
 
 public class WorldDownloadApi extends ApiBase {
 
@@ -12,23 +10,17 @@ public class WorldDownloadApi extends ApiBase {
     }
 
     @Override
-    public String get() throws HttpException {
+    public String get() {
         return gson.toJson(new Status());
     }
 
     @Override
-    public String post(String body) throws HttpException {
+    public String post(String body) throws ApiException {
         body = gson.fromJson(body, String.class);
 
         if (body.startsWith("start:")) {
-            try {
-                WorldDownloadController.instance.start(body.substring(6));
-                return get();
-            }
-            catch (Throwable e) {
-                e.printStackTrace();
-                throw new InternalServerErrorException(e.getMessage());
-            }
+            WorldDownloadController.instance.start(body.substring(6));
+            return get();
         }
 
         if (body.equals("stop")) {
@@ -36,10 +28,11 @@ public class WorldDownloadApi extends ApiBase {
             return get();
         }
 
-        throw new MethodNotSupportedException("Invalid body");
+        throw new ApiException("Invalid body", HttpResponseCodes.BAD_REQUEST);
     }
 
     public static class Status {
+
         public boolean active;
 
         public Status() {

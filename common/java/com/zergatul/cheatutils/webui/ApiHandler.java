@@ -11,8 +11,6 @@ import com.zergatul.cheatutils.modules.hacks.KillAura;
 import com.zergatul.cheatutils.utils.MathUtils;
 import net.minecraft.client.Minecraft;
 import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpException;
-import org.apache.http.MethodNotSupportedException;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -889,7 +887,11 @@ public class ApiHandler implements HttpHandler {
         }
 
         if (api.isEmpty()) {
-            exchange.sendResponseHeaders(404, 0);
+            byte[] bytes = "API handler not found".getBytes(StandardCharsets.UTF_8);
+            exchange.sendResponseHeaders(HttpResponseCodes.NOT_FOUND, bytes.length);
+            OutputStream stream = exchange.getResponseBody();
+            stream.write(bytes);
+            stream.close();
             exchange.close();
             return;
         }
@@ -910,27 +912,15 @@ public class ApiHandler implements HttpHandler {
                     break;
             }
         }
-        catch (MethodNotSupportedException e) {
-            exchange.sendResponseHeaders(404, 0);
-            exchange.close();
-        }
-        catch (NotFoundHttpException e) {
-            byte[] data = e.getMessage().getBytes(StandardCharsets.UTF_8);
-            exchange.sendResponseHeaders(404, 0);
-            OutputStream stream = exchange.getResponseBody();
-            stream.write(data);
-            stream.close();
-            exchange.close();
-        }
-        catch (HttpException e) {
-            sendException(exchange, 503, e);
+        catch (ApiException e) {
+            WebHelper.sendException(exchange, e.getCode(), e);
         }
         catch (Throwable e) {
-            sendException(exchange, 500, e);
+            WebHelper.sendException(exchange, HttpResponseCodes.INTERNAL_SERVER_ERROR, e);
         }
     }
 
-    private void processGet(String[] parts, ApiBase api, HttpExchange exchange) throws HttpException, IOException {
+    private void processGet(String[] parts, ApiBase api, HttpExchange exchange) throws Throwable {
         String response;
         if (parts.length == 3) {
             response = api.get();
@@ -939,31 +929,29 @@ public class ApiHandler implements HttpHandler {
         }
         byte[] data = response.getBytes(StandardCharsets.UTF_8);
         HttpHelper.setJsonContentType(exchange);
-        exchange.sendResponseHeaders(200, data.length);
+        exchange.sendResponseHeaders(HttpResponseCodes.OK, data.length);
         OutputStream stream = exchange.getResponseBody();
         stream.write(data);
         stream.close();
         exchange.close();
     }
 
-    private void processPost(ApiBase api, HttpExchange exchange) throws HttpException, IOException {
-
+    private void processPost(ApiBase api, HttpExchange exchange) throws Throwable {
         String body = IOUtils.toString(exchange.getRequestBody(), StandardCharsets.UTF_8);
         String response = api.post(body);
 
         byte[] data = response.getBytes(StandardCharsets.UTF_8);
         HttpHelper.setJsonContentType(exchange);
-        exchange.sendResponseHeaders(200, data.length);
+        exchange.sendResponseHeaders(HttpResponseCodes.OK, data.length);
         OutputStream stream = exchange.getResponseBody();
         stream.write(data);
         stream.close();
         exchange.close();
     }
 
-    private void processPut(String[] parts, ApiBase api, HttpExchange exchange) throws HttpException, IOException {
-
+    private void processPut(String[] parts, ApiBase api, HttpExchange exchange) throws Throwable {
         if (parts.length < 4) {
-            throw new MethodNotSupportedException("PUT requires id");
+            throw new ApiException("PUT requires id", HttpResponseCodes.BAD_REQUEST);
         }
 
         String body = IOUtils.toString(exchange.getRequestBody(), StandardCharsets.UTF_8);
@@ -971,46 +959,24 @@ public class ApiHandler implements HttpHandler {
 
         byte[] data = response.getBytes(StandardCharsets.UTF_8);
         HttpHelper.setJsonContentType(exchange);
-        exchange.sendResponseHeaders(200, data.length);
+        exchange.sendResponseHeaders(HttpResponseCodes.OK, data.length);
         OutputStream stream = exchange.getResponseBody();
         stream.write(data);
         stream.close();
         exchange.close();
-
     }
 
-    private void processDelete(String[] parts, ApiBase api, HttpExchange exchange) throws HttpException, IOException {
-
+    private void processDelete(String[] parts, ApiBase api, HttpExchange exchange) throws Throwable {
         if (parts.length < 4) {
-            throw new MethodNotSupportedException("DELETE requires id");
+            throw new ApiException("DELETE requires id", HttpResponseCodes.BAD_REQUEST);
         }
 
         String response = api.delete(parts[3]);
         byte[] data = response.getBytes(StandardCharsets.UTF_8);
         HttpHelper.setJsonContentType(exchange);
-        exchange.sendResponseHeaders(200, data.length);
+        exchange.sendResponseHeaders(HttpResponseCodes.OK, data.length);
         OutputStream stream = exchange.getResponseBody();
         stream.write(data);
-        stream.close();
-        exchange.close();
-
-    }
-
-    private void sendException(HttpExchange exchange, int code, Throwable throwable) throws IOException {
-        StringBuilder builder = new StringBuilder();
-        builder.append(throwable.getMessage()).append("\n");
-        builder.append("**********").append("\n");
-
-        for (StackTraceElement element : throwable.getStackTrace())
-            builder.append("\tat ").append(element).append("\n");
-
-        // inner exceptions?
-
-        byte[] bytes = builder.toString().getBytes(StandardCharsets.UTF_8);
-        exchange.getResponseHeaders().set("Content-Type", "text/plain");
-        exchange.sendResponseHeaders(code, bytes.length);
-        OutputStream stream = exchange.getResponseBody();
-        stream.write(bytes);
         stream.close();
         exchange.close();
     }

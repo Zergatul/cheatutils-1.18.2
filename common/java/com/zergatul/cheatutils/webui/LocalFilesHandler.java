@@ -34,29 +34,14 @@ public class LocalFilesHandler implements HttpHandler {
             } else {
                 byte[] bytes = "File not found.".getBytes(StandardCharsets.UTF_8);
                 exchange.getResponseHeaders().set("Content-Type", "text/plain");
-                exchange.sendResponseHeaders(404, bytes.length);
+                exchange.sendResponseHeaders(HttpResponseCodes.NOT_FOUND, bytes.length);
                 OutputStream stream = exchange.getResponseBody();
                 stream.write(bytes);
                 stream.close();
                 exchange.close();
             }
         } catch (Throwable throwable) {
-            StringBuilder builder = new StringBuilder();
-            builder.append(throwable.getMessage()).append("\n");
-            builder.append("**********").append("\n");
-
-            for (StackTraceElement element : throwable.getStackTrace())
-                builder.append("\tat ").append(element).append("\n");
-
-            // inner exceptions?
-
-            byte[] bytes = builder.toString().getBytes(StandardCharsets.UTF_8);
-            exchange.getResponseHeaders().set("Content-Type", "text/plain");
-            exchange.sendResponseHeaders(500, bytes.length);
-            OutputStream stream = exchange.getResponseBody();
-            stream.write(bytes);
-            stream.close();
-            exchange.close();
+            WebHelper.sendException(exchange, throwable);
         }
     }
 }

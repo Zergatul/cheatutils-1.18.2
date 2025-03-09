@@ -2,7 +2,6 @@ package com.zergatul.cheatutils.webui;
 
 import com.zergatul.cheatutils.wrappers.ClassRemapper;
 import net.minecraft.client.Minecraft;
-import org.apache.http.HttpException;
 
 public class ClassNameApi extends ApiBase {
 
@@ -12,17 +11,17 @@ public class ClassNameApi extends ApiBase {
     }
 
     @Override
-    public String get(String className) throws HttpException {
+    public String get(String className) throws ApiException {
         className = ClassRemapper.toObf(className);
         if (className == null) {
-            throw new NotFoundHttpException("Class not found");
+            throw new ApiException("Class not found", HttpResponseCodes.NOT_FOUND);
         }
 
         try {
             Class.forName(className, false, Minecraft.class.getClassLoader());
         }
         catch (ClassNotFoundException e) {
-            throw new NotFoundHttpException("Class not found");
+            throw new ApiException("Class not found", HttpResponseCodes.NOT_FOUND);
         }
 
         return "{ \"ok\": true }";

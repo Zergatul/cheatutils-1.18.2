@@ -11,9 +11,9 @@ const modules = {
 };
 
 const module = (params) => {
-    params.componentRef = getComponent(`${params.group}/${params.component}`);
-
     modules.all.push(params);
+
+    params.componentRef = getComponent(`${params.group}/${params.component}`);
     modules[params.group][params.component] = params;
 };
 
@@ -546,6 +546,15 @@ module({
     component: 'WorldDownload',
     path: 'world-download',
     tags: ['world', 'download']
+});
+module({
+    group: 'utility',
+    name: 'Matrix Server',
+    component: 'MatrixServer',
+    tags: ['matrix', 'discord'],
+    onClick() {
+        window.open('https://matrix.to/#/#cheatutils:matrix.org', '_blank');
+    }
 });
 
 export { modules }

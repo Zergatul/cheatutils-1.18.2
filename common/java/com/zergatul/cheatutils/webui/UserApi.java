@@ -1,7 +1,6 @@
 package com.zergatul.cheatutils.webui;
 
 import net.minecraft.client.Minecraft;
-import org.apache.http.MethodNotSupportedException;
 
 public class UserApi extends ApiBase {
 
@@ -11,7 +10,7 @@ public class UserApi extends ApiBase {
     }
 
     @Override
-    public String get() throws MethodNotSupportedException {
+    public String get() {
         return Minecraft.getInstance().getUser().getName();
     }
 }

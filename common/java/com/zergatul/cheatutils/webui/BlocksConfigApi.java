@@ -8,8 +8,6 @@ import com.zergatul.cheatutils.configs.ConfigStore;
 import com.zergatul.cheatutils.modules.esp.BlockFinder;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
-import org.apache.http.HttpException;
-import org.apache.http.MethodNotSupportedException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,12 +28,12 @@ public class BlocksConfigApi extends ApiBase {
     }
 
     @Override
-    public synchronized String post(String body) throws MethodNotSupportedException {
+    public synchronized String post(String body) throws ApiException {
         BlockEspConfig jsonConfig = gson.fromJson(body, BlockEspConfig.class);
         jsonConfig.validate();
 
         if (jsonConfig.blocks.size() == 0) {
-            throw new MethodNotSupportedException("Received empty BlockEspConfig.");
+            throw new ApiException("Received empty BlockEspConfig.", HttpResponseCodes.BAD_REQUEST);
         }
 
         BlocksConfig blocksConfig = ConfigStore.instance.getConfig().blocks;
@@ -52,7 +50,7 @@ public class BlocksConfigApi extends ApiBase {
             }
 
             if (configs.size() > 1) {
-                throw new MethodNotSupportedException("Received BlockEspConfig with blocks from multiple already created configs.");
+                throw new ApiException("Received BlockEspConfig with blocks from multiple already created configs.", HttpResponseCodes.BAD_REQUEST);
             }
 
             if (configs.size() == 1) {
@@ -75,11 +73,11 @@ public class BlocksConfigApi extends ApiBase {
     }
 
     @Override
-    public synchronized String delete(String id) throws MethodNotSupportedException {
+    public synchronized String delete(String id) throws ApiException {
         ResourceLocation loc = ResourceLocation.parse(id);
         Block block = Registries.BLOCKS.getValue(loc);
         if (block == null) {
-            throw new MethodNotSupportedException("Cannot find block by id.");
+            throw new ApiException("Cannot find block by id.", HttpResponseCodes.BAD_REQUEST);
         }
 
         BlocksConfig blocksConfig = ConfigStore.instance.getConfig().blocks;
@@ -87,7 +85,7 @@ public class BlocksConfigApi extends ApiBase {
         if (config != null) {
             blocksConfig.remove(config);
         } else {
-            throw new MethodNotSupportedException("Config doesn't exist for this block.");
+            throw new ApiException("Config doesn't exist for this block.", HttpResponseCodes.BAD_REQUEST);
         }
 
         ConfigStore.instance.requestWrite();
@@ -103,17 +101,17 @@ public class BlocksConfigApi extends ApiBase {
         }
 
         @Override
-        public String post(String body) throws HttpException {
+        public String post(String body) throws ApiException {
             String id = gson.fromJson(body, String.class);
             ResourceLocation loc = ResourceLocation.parse(id);
             Block block = Registries.BLOCKS.getValue(loc);
             if (block == null) {
-                throw new MethodNotSupportedException("Cannot find block by id.");
+                throw new ApiException("Cannot find block by id.", HttpResponseCodes.BAD_REQUEST);
             }
 
             BlocksConfig blocksConfig = ConfigStore.instance.getConfig().blocks;
             if (blocksConfig.find(block) != null) {
-                throw new MethodNotSupportedException("Selected block is already part of other BlockEspConfig.");
+                throw new ApiException("Selected block is already part of other BlockEspConfig.", HttpResponseCodes.BAD_REQUEST);
             }
 
             BlockEspConfig config = BlockEspConfig.createDefault(ImmutableList.from(block));

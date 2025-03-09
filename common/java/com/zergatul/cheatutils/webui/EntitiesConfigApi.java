@@ -1,9 +1,9 @@
 package com.zergatul.cheatutils.webui;
 
+import com.zergatul.cheatutils.collections.ImmutableList;
 import com.zergatul.cheatutils.configs.ConfigStore;
 import com.zergatul.cheatutils.configs.EntityEspConfig;
 import com.zergatul.cheatutils.wrappers.ClassRemapper;
-import org.apache.http.MethodNotSupportedException;
 
 public class EntitiesConfigApi extends ApiBase {
 
@@ -13,15 +13,15 @@ public class EntitiesConfigApi extends ApiBase {
     }
 
     @Override
-    public synchronized String get() throws MethodNotSupportedException {
+    public synchronized String get() {
         Object[] result;
-        var list = ConfigStore.instance.getConfig().entities.configs;
+        ImmutableList<EntityEspConfig> list = ConfigStore.instance.getConfig().entities.configs;
         result = list.stream().toArray();
         return gson.toJson(result);
     }
 
     @Override
-    public synchronized String post(String body) throws MethodNotSupportedException {
+    public synchronized String post(String body) throws ApiException {
         EntityEspConfig jsonConfig = gson.fromJson(body, EntityEspConfig.class);
         jsonConfig.validate();
 
@@ -30,7 +30,7 @@ public class EntitiesConfigApi extends ApiBase {
                 .findFirst()
                 .orElse(null);
         if (config != null) {
-            throw new MethodNotSupportedException("Entity config already exists.");
+            throw new ApiException("Entity config already exists.", HttpResponseCodes.BAD_REQUEST);
         }
 
         config = EntityEspConfig.createDefault(jsonConfig.clazz);
@@ -41,13 +41,13 @@ public class EntitiesConfigApi extends ApiBase {
     }
 
     @Override
-    public synchronized String put(String className, String body) throws MethodNotSupportedException {
+    public synchronized String put(String className, String body) throws ApiException {
         EntityEspConfig jsonConfig = gson.fromJson(body, EntityEspConfig.class);
         jsonConfig.validate();
 
         String obfClassName = ClassRemapper.toObf(className);
         if (!obfClassName.equals(jsonConfig.clazz.getName())) {
-            throw new MethodNotSupportedException("Entity class name don't match.");
+            throw new ApiException("Entity class name don't match.", HttpResponseCodes.BAD_REQUEST);
         }
 
         EntityEspConfig config = ConfigStore.instance.getConfig().entities.configs.stream()
@@ -55,7 +55,7 @@ public class EntitiesConfigApi extends ApiBase {
                 .findFirst()
                 .orElse(null);
         if (config == null) {
-            throw new MethodNotSupportedException("Cannot find entity config.");
+            throw new ApiException("Cannot find entity config.", HttpResponseCodes.BAD_REQUEST);
         }
 
         config.copyFrom(jsonConfig);
@@ -65,7 +65,7 @@ public class EntitiesConfigApi extends ApiBase {
     }
 
     @Override
-    public synchronized String delete(String className) throws MethodNotSupportedException {
+    public synchronized String delete(String className) {
         String obfClassName = ClassRemapper.toObf(className);
         EntityEspConfig config = ConfigStore.instance.getConfig().entities.configs.stream()
                 .filter(c -> c.clazz.getName().equals(obfClassName))

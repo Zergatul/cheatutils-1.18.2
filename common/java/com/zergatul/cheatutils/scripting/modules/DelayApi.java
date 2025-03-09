@@ -1,6 +1,6 @@
 package com.zergatul.cheatutils.scripting.modules;
 
-import com.zergatul.cheatutils.modules.utilities.DelayedRun;
+import com.zergatul.cheatutils.concurrent.TickEndExecutor;
 import com.zergatul.scripting.MethodDescription;
 
 import java.util.concurrent.CompletableFuture;
@@ -16,7 +16,7 @@ public class DelayApi {
         }
 
         CompletableFuture<Void> future = new CompletableFuture<>();
-        DelayedRun.instance.add(ticks, () -> future.complete(null));
+        TickEndExecutor.instance.waitTicks(ticks, () -> future.complete(null));
         return future;
     }
 }

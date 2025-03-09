@@ -4,7 +4,6 @@ import com.zergatul.cheatutils.configs.ConfigStore;
 import com.zergatul.cheatutils.controllers.ScriptsController;
 import com.zergatul.scripting.DiagnosticMessage;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.http.HttpException;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,7 +16,7 @@ public class KeyBindingScriptsApi extends ApiBase {
     }
 
     @Override
-    public String get() throws HttpException {
+    public String get() {
         String[] bindings = ConfigStore.instance.getConfig().keyBindingsConfig.bindings;
         return gson.toJson(ScriptsController.instance.list().stream().map(s -> {
             int index = ArrayUtils.indexOf(bindings, s.name);
@@ -26,7 +25,7 @@ public class KeyBindingScriptsApi extends ApiBase {
     }
 
     @Override
-    public String get(String id) throws HttpException {
+    public String get(String id) {
         Optional<ScriptsController.Script> optional = ScriptsController.instance.list().stream().filter(s -> s.name.equals(id)).findFirst();
         if (optional.isEmpty()) {
             return gson.toJson((Object) null);
@@ -36,38 +35,29 @@ public class KeyBindingScriptsApi extends ApiBase {
     }
 
     @Override
-    public String put(String id, String body) throws HttpException {
+    public String put(String id, String body) {
         Script script = gson.fromJson(body, Script.class);
-        try {
-            List<DiagnosticMessage> messages = ScriptsController.instance.update(id, script.name, script.code);
-            if (!messages.isEmpty()) {
-                return gson.toJson(messages);
-            }
-        } catch (Throwable e) {
-            throw new HttpException(e.getMessage());
+        List<DiagnosticMessage> messages = ScriptsController.instance.update(id, script.name, script.code);
+        if (!messages.isEmpty()) {
+            return gson.toJson(messages);
         }
         ConfigStore.instance.requestWrite();
         return "{ \"ok\": true }";
     }
 
     @Override
-    public String post(String body) throws HttpException {
+    public String post(String body) {
         Script script = gson.fromJson(body, Script.class);
-        try {
-            List<DiagnosticMessage> messages = ScriptsController.instance.add(script.name, script.code, false);
-            if (!messages.isEmpty()) {
-                return gson.toJson(messages);
-            }
-        }
-        catch (Throwable e) {
-            throw new HttpException(e.getMessage());
+        List<DiagnosticMessage> messages = ScriptsController.instance.add(script.name, script.code, false);
+        if (!messages.isEmpty()) {
+            return gson.toJson(messages);
         }
         ConfigStore.instance.requestWrite();
         return "{ \"ok\": true }";
     }
 
     @Override
-    public String delete(String id) throws HttpException {
+    public String delete(String id) {
         ScriptsController.instance.remove(id);
         ConfigStore.instance.requestWrite();
         return "true";

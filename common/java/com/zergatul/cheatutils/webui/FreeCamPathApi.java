@@ -1,7 +1,7 @@
 package com.zergatul.cheatutils.webui;
 
 import com.zergatul.cheatutils.modules.esp.FreeCam;
-import org.apache.http.HttpException;
+
 
 public class FreeCamPathApi extends ApiBase {
 
@@ -11,12 +11,12 @@ public class FreeCamPathApi extends ApiBase {
     }
 
     @Override
-    public String get() throws HttpException {
+    public String get() {
         return gson.toJson(FreeCam.instance.getPath().get());
     }
 
     @Override
-    public String post(String body) throws HttpException {
+    public String post(String body) {
         Double time = gson.fromJson(body, Double.class);
         if (time == null) {
             return "{}";
@@ -27,7 +27,7 @@ public class FreeCamPathApi extends ApiBase {
     }
 
     @Override
-    public String delete(String id) throws HttpException {
+    public String delete(String id) {
         FreeCam.instance.getPath().clear();
         return "{ \"ok\": true }";
     }

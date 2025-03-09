@@ -3,7 +3,6 @@ package com.zergatul.cheatutils.webui;
 import com.zergatul.cheatutils.collections.ImmutableList;
 import com.zergatul.cheatutils.configs.ConfigStore;
 import com.zergatul.cheatutils.configs.EntityEspConfig;
-import org.apache.http.HttpException;
 
 public class EntityConfigMoveApi extends ApiBase {
 
@@ -13,7 +12,7 @@ public class EntityConfigMoveApi extends ApiBase {
     }
 
     @Override
-    public String post(String body) throws HttpException {
+    public String post(String body) {
         Request request = gson.fromJson(body, Request.class);
         if (request.clazz == null) {
             return gson.toJson(new Response(false, "Class is null"));

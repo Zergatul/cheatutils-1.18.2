@@ -2,8 +2,6 @@ package com.zergatul.cheatutils.webui;
 
 import com.google.gson.Gson;
 import com.zergatul.cheatutils.configs.ConfigStore;
-import org.apache.http.HttpException;
-import org.apache.http.MethodNotSupportedException;
 
 public abstract class ApiBase {
 
@@ -11,23 +9,23 @@ public abstract class ApiBase {
 
     public abstract String getRoute();
 
-    public String get() throws HttpException {
-        throw new MethodNotSupportedException("Method not supported");
+    public String get() throws Throwable {
+        throw new ApiException("Method not allowed", HttpResponseCodes.METHOD_NOT_ALLOWED);
     }
 
-    public String get(String id) throws HttpException {
-        throw new MethodNotSupportedException("Method not supported");
+    public String get(String id) throws Throwable {
+        throw new ApiException("Method not allowed", HttpResponseCodes.METHOD_NOT_ALLOWED);
     }
 
-    public String put(String id, String body) throws HttpException {
-        throw new MethodNotSupportedException("Method not supported");
+    public String put(String id, String body) throws Throwable {
+        throw new ApiException("Method not allowed", HttpResponseCodes.METHOD_NOT_ALLOWED);
     }
 
-    public String post(String body) throws HttpException {
-        throw new MethodNotSupportedException("Method not supported");
+    public String post(String body) throws Throwable {
+        throw new ApiException("Method not allowed", HttpResponseCodes.METHOD_NOT_ALLOWED);
     }
 
-    public String delete(String id) throws HttpException {
-        throw new MethodNotSupportedException("Method not supported");
+    public String delete(String id) throws Throwable {
+        throw new ApiException("Method not allowed", HttpResponseCodes.METHOD_NOT_ALLOWED);
     }
 }

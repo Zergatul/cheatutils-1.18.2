@@ -3,7 +3,6 @@ package com.zergatul.cheatutils.webui;
 import com.zergatul.cheatutils.configs.Config;
 import com.zergatul.cheatutils.configs.ConfigStore;
 import com.zergatul.cheatutils.configs.ModuleStateProvider;
-import org.apache.http.HttpException;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -17,7 +16,7 @@ public class ModulesStatusApi extends ApiBase {
     }
 
     @Override
-    public String get() throws HttpException {
+    public String get() {
         Config config = ConfigStore.instance.getConfig();
 
         Map<String, Boolean> map = new HashMap<>();
@@ -28,7 +27,6 @@ public class ModulesStatusApi extends ApiBase {
                 try {
                     moduleConfig = (ModuleStateProvider) field.get(config);
                 } catch (IllegalAccessException e) {
-                    e.printStackTrace();
                     continue;
                 }
 

@@ -1,7 +1,6 @@
 package com.zergatul.cheatutils.webui;
 
 import com.zergatul.cheatutils.modules.scripting.Debugging;
-import org.apache.http.HttpException;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -17,7 +16,7 @@ public class DebuggingApi extends ApiBase {
     }
 
     @Override
-    public String get(String input) throws HttpException {
+    public String get(String input) {
         int id = Integer.parseInt(input);
         List<Debugging.Entry> entries = Debugging.instance.getEntries(id);
         if (entries.isEmpty()) {
