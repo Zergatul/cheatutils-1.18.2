@@ -9,7 +9,6 @@ import com.zergatul.cheatutils.modules.automation.*;
 import com.zergatul.cheatutils.modules.esp.*;
 import com.zergatul.cheatutils.modules.hacks.*;
 import com.zergatul.cheatutils.modules.scripting.*;
-import com.zergatul.cheatutils.modules.utilities.DelayedRun;
 import com.zergatul.cheatutils.modules.utilities.Profiles;
 import com.zergatul.cheatutils.modules.utilities.RenderUtilities;
 import com.zergatul.cheatutils.modules.visuals.*;
@@ -86,7 +85,6 @@ public class ModMain implements ClientModInitializer {
         register(ServerPlugins.instance);
         register(RenderUtilities.instance);
         register(Containers.instance);
-        register(DelayedRun.instance);
         register(AntiHunger.instance);
 
         register(TickEndExecutor.instance);
